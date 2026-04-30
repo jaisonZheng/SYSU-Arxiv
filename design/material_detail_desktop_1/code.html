@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CS101 Midterm Summary - AcademiaArchive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#727785",
+                        "secondary-fixed": "#e1e0ff",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "primary-fixed": "#d8e2ff",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#191c1d",
+                        "surface-container": "#edeeef",
+                        "primary": "#0058be",
+                        "surface-container-low": "#f3f4f5",
+                        "surface-container-highest": "#e1e3e4",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-container": "#fffbff",
+                        "surface-bright": "#f8f9fa",
+                        "secondary": "#4648d4",
+                        "outline-variant": "#c2c6d6",
+                        "on-surface-variant": "#424754",
+                        "on-primary-fixed": "#001a42",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "tertiary": "#924700",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "surface-tint": "#005ac2",
+                        "on-secondary-fixed-variant": "#2f2ebe",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e1e3e4",
+                        "on-primary-container": "#fefcff",
+                        "on-tertiary-fixed": "#311400",
+                        "background": "#f8f9fa",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#2170e4",
+                        "surface-container-high": "#e7e8e9",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary-container": "#b75b00",
+                        "on-secondary-container": "#fffbff",
+                        "inverse-primary": "#adc6ff",
+                        "tertiary-fixed": "#ffdcc6",
+                        "surface-dim": "#d9dadb",
+                        "on-surface": "#191c1d",
+                        "secondary-container": "#6063ee",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-fixed": "#07006c",
+                        "surface": "#f8f9fa"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "container-max": "1280px",
+                        "unit": "4px",
+                        "margin-page": "40px",
+                        "stack-sm": "8px",
+                        "gutter": "24px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "h3": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "h1": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "h2": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "h1": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopNavBar Component -->
+<header class="bg-white dark:bg-gray-900 docked full-width top-0 border-b border-b border-gray-200 dark:border-gray-800 z-50 sticky">
+<div class="flex items-center justify-between px-8 w-full h-16 max-w-screen-2xl mx-auto">
+<!-- Left: Logo & Search -->
+<div class="flex items-center gap-8">
+<div class="text-xl font-bold text-gray-900 dark:text-white tracking-tighter">
+                    AcademiaArchive
+                </div>
+<!-- Search Bar (on_left) -->
+<div class="relative hidden lg:block w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">search</span>
+<input class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-sans" placeholder="Search resources..." type="text"/>
+</div>
+</div>
+<!-- Middle: Navigation Links -->
+<nav class="hidden md:flex items-center gap-6 h-full">
+<a class="font-sans text-sm tracking-tight font-medium text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-4 mt-4 h-full flex items-center opacity-80 transition-all" href="#">
+                    Explore
+                </a>
+<a class="font-sans text-sm tracking-tight font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 h-full flex items-center px-2" href="#">
+                    Upload
+                </a>
+<a class="font-sans text-sm tracking-tight font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 h-full flex items-center px-2" href="#">
+                    Departments
+                </a>
+<a class="font-sans text-sm tracking-tight font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 h-full flex items-center px-2" href="#">
+                    Library
+                </a>
+</nav>
+<!-- Right: Actions & Profile -->
+<div class="flex items-center gap-4 text-blue-600 dark:text-blue-400">
+<button class="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-gray-200 ml-2 cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="Researcher Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a female researcher in a bright, modern academic setting. The portrait is sharply focused with soft, high-key lighting characteristic of contemporary light-mode UI design. She wears glasses and a smart casual blazer, conveying intellect and reliability. The background is a slightly out-of-focus white wall, aligning with the minimalist institutional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy5mSQuxyjZzMMK0RKKbs3rvbKOnyd891cOkT-AbIA2gc7M88mvEwsC_SsjcKJmo8XO2jNRAdABRiaZFWQK8U8ZIbUDLCJChN7HlANLi62iyIlUI8p57B2qJoRDU-NqVyyn3gOa-Lwm0GwIpgor6F2n_wWqTZHvyVCXvYn5ncVcTEI5csXEba6iOo2pNb8a06KUFyRw3iMrWAZzTa5qvjoRKstVJq0J1jSjMKuCxFfOyFbT5QHqFgL_p3-QDiNR6ADhebgTA0nVnJ2"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Layout Container -->
+<div class="flex-1 flex max-w-screen-2xl mx-auto w-full">
+<!-- SideNavBar Component -->
+<aside class="hidden md:flex bg-gray-50 dark:bg-gray-950 h-full w-64 border-r border-gray-200 dark:border-gray-800 flex-col gap-1 p-4 h-screen sticky top-16 z-40">
+<div class="px-3 mb-6 mt-2">
+<h2 class="text-lg font-black text-gray-900 dark:text-white">Navigation</h2>
+<p class="font-sans text-[13px] font-medium text-blue-600 dark:text-blue-400 opacity-80">Academic Portal</p>
+</div>
+<nav class="flex flex-col gap-1 w-full">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all scale-95 active:scale-100 transition-transform" href="#">
+<span class="material-symbols-outlined text-[18px]">home</span>
+<span class="font-sans text-[13px] font-medium">Home</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md scale-95 active:scale-100 transition-transform" href="#">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">folder_open</span>
+<span class="font-sans text-[13px] font-medium">Collections</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all scale-95 active:scale-100 transition-transform" href="#">
+<span class="material-symbols-outlined text-[18px]">database</span>
+<span class="font-sans text-[13px] font-medium">Datasets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all scale-95 active:scale-100 transition-transform" href="#">
+<span class="material-symbols-outlined text-[18px]">group</span>
+<span class="font-sans text-[13px] font-medium">Authors</span>
+</a>
+<div class="my-2 border-t border-gray-200 dark:border-gray-800"></div>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all scale-95 active:scale-100 transition-transform" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="font-sans text-[13px] font-medium">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-margin-page pb-24 overflow-y-auto">
+<!-- Breadcrumbs / Top Meta -->
+<div class="flex items-center gap-2 mb-stack-md font-body-sm text-body-sm text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#">Computer Science</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">CS101</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface">Summaries</span>
+</div>
+<!-- Header -->
+<div class="mb-stack-lg flex justify-between items-start">
+<div>
+<h1 class="font-h1 text-h1 text-on-background mb-unit">CS101 Midterm Summary</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Comprehensive review notes covering weeks 1-6 of Introduction to Computer Science.</p>
+</div>
+<div class="flex gap-unit">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-low border border-outline-variant font-label-caps text-label-caps text-on-surface">
+                        VERIFIED
+                    </span>
+<span class="inline-flex items-center px-2 py-1 rounded bg-primary-fixed border border-primary-fixed-dim font-label-caps text-label-caps text-on-primary-fixed">
+                        HIGH RATED
+                    </span>
+</div>
+</div>
+<!-- Content Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Document Preview -->
+<div class="lg:col-span-8 flex flex-col gap-stack-md">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<!-- Preview Toolbar -->
+<div class="bg-surface border-b border-outline-variant p-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<button class="p-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+<button class="p-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">zoom_out</span>
+</button>
+<span class="font-label-caps text-label-caps text-on-surface-variant ml-2">PAGE 1 OF 12</span>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">fullscreen</span>
+</button>
+</div>
+<!-- Preview Area Placeholder -->
+<div class="relative bg-surface-container-high w-full aspect-[8.5/11] flex items-center justify-center p-8 overflow-hidden">
+<!-- Simulated Document Content to represent functional flat UI -->
+<div class="w-full h-full bg-white shadow-sm border border-outline-variant p-10 flex flex-col gap-6 opacity-90">
+<div class="w-3/4 h-8 bg-surface-container-high rounded-sm"></div>
+<div class="w-1/2 h-4 bg-surface-container rounded-sm mb-4"></div>
+<div class="space-y-3">
+<div class="w-full h-3 bg-surface-container rounded-sm"></div>
+<div class="w-full h-3 bg-surface-container rounded-sm"></div>
+<div class="w-11/12 h-3 bg-surface-container rounded-sm"></div>
+<div class="w-full h-3 bg-surface-container rounded-sm"></div>
+<div class="w-4/5 h-3 bg-surface-container rounded-sm"></div>
+</div>
+<div class="mt-8 w-1/3 h-6 bg-surface-container-high rounded-sm"></div>
+<div class="space-y-3">
+<div class="w-full h-3 bg-surface-container rounded-sm"></div>
+<div class="w-10/12 h-3 bg-surface-container rounded-sm"></div>
+<div class="w-full h-3 bg-surface-container rounded-sm"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Sidebar Meta & Actions -->
+<div class="lg:col-span-4 flex flex-col gap-stack-md">
+<!-- Actions Component -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-6 flex flex-col gap-4">
+<button class="w-full h-10 bg-primary text-on-primary rounded flex items-center justify-center gap-2 font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                            Download PDF
+                        </button>
+<button class="w-full h-10 bg-surface-container-lowest border border-outline text-primary rounded flex items-center justify-center gap-2 font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">bookmark_add</span>
+                            Save to Collection
+                        </button>
+</div>
+<!-- Resource Metadata Component -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-6 flex flex-col gap-stack-md">
+<h3 class="font-h3 text-h3 text-on-background border-b border-outline-variant pb-2">Resource Metadata</h3>
+<div class="flex flex-col gap-3">
+<div class="flex justify-between items-center py-1 border-b border-surface-variant">
+<span class="font-label-caps text-label-caps text-on-surface-variant">FILE TYPE</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-error">picture_as_pdf</span>
+                                    PDF Document
+                                </span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-surface-variant">
+<span class="font-label-caps text-label-caps text-on-surface-variant">FILE SIZE</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">2.4 MB</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-surface-variant">
+<span class="font-label-caps text-label-caps text-on-surface-variant">UPLOAD DATE</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Oct 14, 2023</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-surface-variant">
+<span class="font-label-caps text-label-caps text-on-surface-variant">LANGUAGE</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">English</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="font-label-caps text-label-caps text-on-surface-variant">DEPARTMENT</span>
+<span class="font-body-sm text-body-sm text-primary hover:underline cursor-pointer font-medium">Computer Science</span>
+</div>
+</div>
+</div>
+<!-- Contributor Profile Component -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-6 flex flex-col gap-stack-md">
+<h3 class="font-h3 text-h3 text-on-background border-b border-outline-variant pb-2">Contributor</h3>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full overflow-hidden border border-outline-variant shrink-0">
+<img alt="Contributor" class="w-full h-full object-cover" data-alt="A close-up headshot of a male student contributor. He looks directly at the camera with a friendly, approachable expression. The lighting is clean and bright, consistent with an institutional minimalist UI, removing any distracting shadows. He wears a simple dark crew-neck shirt against a completely neutral, flat light-grey background, ensuring the focus remains on his identity within the academic portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaGXQ1_YXuby8D76Pj92a9Vv_1NJOo_HZ3-1vig5UBHwOgfPpz4oVO8hF52le0cMnm0Fdc7oJM4a1TNIS68YVwE0zJh7SIfK67DDOyWwQXDy9U8wDizyjnaZaVHF-orq6i7Ai-tcaYkflPP4BZKZGslNxh_9x9lN6B_8UXSVFbeYz9z1jyKt9-X-vuvjjVmthRp01Cqzu0GcDYW6xw913hWIWdqKCijk_ozYWfuw5VtFQixPCLLZUpxn91U9v0Rxvx7qN8SHOm_a69"/>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-background">David Chen</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Undergraduate TA, CS Dept.</span>
+</div>
+</div>
+<button class="w-full h-8 bg-surface border border-outline-variant text-on-surface rounded font-label-caps text-label-caps hover:bg-surface-container transition-colors mt-2">
+                            VIEW PROFILE
+                        </button>
+</div>
+</div>
+</div>
+<!-- Related Resources Section -->
+<div class="mt-16">
+<h2 class="font-h2 text-h2 text-on-background mb-stack-lg border-b border-outline-variant pb-4">Related Resources</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Related Card 1 -->
+<a class="group block bg-surface-container-lowest border border-outline-variant rounded p-6 hover:border-primary hover:shadow-sm transition-all duration-200" href="#">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-block px-2 py-1 bg-surface-container rounded text-on-surface font-label-caps text-[10px]">LECTURE NOTES</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary text-[20px]">description</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-background mb-2 line-clamp-2">CS101 Week 4: Data Structures Intro</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">Overview of arrays, linked lists, and basic memory allocation concepts.</p>
+<div class="flex items-center gap-2 mt-auto pt-4 border-t border-surface-variant">
+<span class="font-label-caps text-[10px] text-on-surface-variant">PDF • 1.2 MB</span>
+</div>
+</a>
+<!-- Related Card 2 -->
+<a class="group block bg-surface-container-lowest border border-outline-variant rounded p-6 hover:border-primary hover:shadow-sm transition-all duration-200" href="#">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-block px-2 py-1 bg-surface-container rounded text-on-surface font-label-caps text-[10px]">PRACTICE EXAM</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary text-[20px]">quiz</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-background mb-2 line-clamp-2">2022 Midterm Practice Set</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">Previous year's midterm questions with an included answer key.</p>
+<div class="flex items-center gap-2 mt-auto pt-4 border-t border-surface-variant">
+<span class="font-label-caps text-[10px] text-on-surface-variant">PDF • 3.5 MB</span>
+</div>
+</a>
+<!-- Related Card 3 -->
+<a class="group block bg-surface-container-lowest border border-outline-variant rounded p-6 hover:border-primary hover:shadow-sm transition-all duration-200" href="#">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-block px-2 py-1 bg-surface-container rounded text-on-surface font-label-caps text-[10px]">CHEAT SHEET</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary text-[20px]">article</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-background mb-2 line-clamp-2">Python Syntax Quick Reference</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">One-page printable reference for all core Python functions needed for CS101.</p>
+<div class="flex items-center gap-2 mt-auto pt-4 border-t border-surface-variant">
+<span class="font-label-caps text-[10px] text-on-surface-variant">IMG • 800 KB</span>
+</div>
+</a>
+<!-- Related Card 4 -->
+<a class="group block bg-surface-container-lowest border border-outline-variant rounded p-6 hover:border-primary hover:shadow-sm transition-all duration-200" href="#">
+<div class="flex justify-between items-start mb-4">
+<span class="inline-block px-2 py-1 bg-surface-container rounded text-on-surface font-label-caps text-[10px]">STUDY GUIDE</span>
+<span class="material-symbols-outlined text-outline group-hover:text-primary text-[20px]">menu_book</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-background mb-2 line-clamp-2">Algorithmic Complexity Basics</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">A deep dive into Big O notation with visual examples.</p>
+<div class="flex items-center gap-2 mt-auto pt-4 border-t border-surface-variant">
+<span class="font-label-caps text-[10px] text-on-surface-variant">PDF • 2.1 MB</span>
+</div>
+</a>
+</div>
+</div>
+</main>
+</div>
+</body></html>

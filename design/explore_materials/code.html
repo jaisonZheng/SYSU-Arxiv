@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ScholarArchive - Material Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#2170e4",
+                        "surface-bright": "#f8f9fa",
+                        "on-background": "#191c1d",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#727785",
+                        "on-primary-container": "#fefcff",
+                        "surface": "#f8f9fa",
+                        "surface-dim": "#d9dadb",
+                        "on-surface": "#191c1d",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "inverse-primary": "#adc6ff",
+                        "error": "#ba1a1a",
+                        "secondary": "#4648d4",
+                        "secondary-container": "#6063ee",
+                        "on-tertiary-container": "#fffbff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#07006c",
+                        "on-tertiary-fixed": "#311400",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-variant": "#e1e3e4",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#f0f1f2",
+                        "on-secondary-fixed-variant": "#2f2ebe",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c2c6d6",
+                        "surface-container-high": "#e7e8e9",
+                        "tertiary-container": "#b75b00",
+                        "background": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#924700",
+                        "tertiary-fixed-dim": "#ffb786",
+                        "surface-tint": "#005ac2",
+                        "tertiary-fixed": "#ffdcc6",
+                        "on-tertiary-fixed-variant": "#723600",
+                        "inverse-surface": "#2e3132",
+                        "on-primary-fixed": "#001a42",
+                        "on-primary-fixed-variant": "#004395",
+                        "on-surface-variant": "#424754",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "surface-container-low": "#f3f4f5",
+                        "on-secondary-container": "#fffbff",
+                        "primary": "#0058be",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container": "#edeeef"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "stack-sm": "8px",
+                        "margin-page": "40px",
+                        "gutter": "24px",
+                        "stack-md": "16px",
+                        "container-max": "1280px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "h3": ["Inter"],
+                        "h2": ["Inter"],
+                        "h1": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "h3": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h1": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 docked full-width top-0 z-50 fixed w-full">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-7xl mx-auto font-inter antialiased tracking-tight">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400" data-icon="account_balance">account_balance</span>
+<h1 class="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">ScholarArchive</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 px-1 py-4 font-label-md" href="#">Explore</a>
+<a class="text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors px-1 py-4 font-label-md" href="#">Home</a>
+<a class="text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors px-1 py-4 font-label-md" href="#">Upload</a>
+<a class="text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors px-1 py-4 font-label-md" href="#">Profile</a>
+</nav>
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-gray-500" data-icon="search">search</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow pt-24 pb-20 md:pb-12 max-w-7xl mx-auto px-6 w-full">
+<!-- Search & Filter Header -->
+<div class="mb-stack-lg">
+<h2 class="font-h2 text-h2 mb-4">Explore Academic Resources</h2>
+<div class="flex flex-col md:flex-row gap-4">
+<div class="relative flex-grow">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-12 pr-4 py-3 bg-white border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none font-body-md" placeholder="Search calculus, economics, research papers..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="filter_list">filter_list</span>
+<span class="font-label-md">Filters</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="sort">sort</span>
+<span class="font-label-md">Trending</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Resource Bento/Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Item 1 -->
+<div class="bg-white border border-outline-variant p-6 rounded-lg hover:border-primary transition-all group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="bg-blue-50 text-primary px-3 py-1 rounded text-label-caps uppercase">Mathematics</span>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+<span class="font-label-caps">1.2k</span>
+</div>
+</div>
+<h3 class="font-h3 text-h3 mb-2 group-hover:text-primary transition-colors">Calculus II Final Prep</h3>
+<p class="text-body-sm text-on-surface-variant mb-4 line-clamp-2">Comprehensive review of Taylor series, double integrals, and polar coordinates with solved exam problems.</p>
+</div>
+<div class="flex items-center justify-between border-t border-surface-container-high pt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Contributor" data-alt="A clean, minimalist profile photograph of a university student in a bright studio. The background is a soft, neutral gray matching a modern institutional aesthetic. The student is smiling warmly, representing academic collaboration and reliability. Soft, diffused lighting highlights clear facial details in a professional, high-key style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2Td6glB9IPQH5JjmlX_NIyvwg6r8P16e99Na3ukpIKetfSZ3nxTUOl-2e26Aq4En7khY7vLwERgoDskNye6voryneiHdiZTBgFECeZVT-YkgZF70OJMj0jcTX5RF-wTSmsU2S1tFXdd2JWnlNN4EtWiKoaIKgRwBpS_jJ0j_k4byfo8BVzg-2wrkU2JU0FFeagIpvhQLIugW2Ps-Wm9E6MO1pQDQSqoIVtfLEDpPapELrTIj3zXaw8uOhKOh4XDP8BYY8Zad9H00S"/>
+</div>
+<span class="font-label-md text-on-surface-variant">Dr. Aris Thorne</span>
+</div>
+<span class="text-label-caps text-outline">Oct 2023</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-white border border-outline-variant p-6 rounded-lg hover:border-primary transition-all group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="bg-surface-container-low text-on-surface-variant px-3 py-1 rounded text-label-caps uppercase">Physics</span>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+<span class="font-label-caps">856</span>
+</div>
+</div>
+<h3 class="font-h3 text-h3 mb-2 group-hover:text-primary transition-colors">Quantum Mechanics Lab Notes</h3>
+<p class="text-body-sm text-on-surface-variant mb-4 line-clamp-2">Detailed observations on the Stern-Gerlach experiment and wave-particle duality measurements.</p>
+</div>
+<div class="flex items-center justify-between border-t border-surface-container-high pt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Contributor" data-alt="A professional and clean portrait of a researcher in a brightly lit academic setting. The person is dressed in smart-casual attire, reflecting a modern intellectual environment. The background is a minimalist office with soft white and gray tones. Lighting is even and flattering, emphasizing a mood of focused study and clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLrL_maPFHzoDwTPI26pPUkKSFUebC2kA4ul-nF_ppLATW7SRTw2KckLq7F8rPVVr2iqSX1meUo6wscK3v-IOcE2N9tXC0Xw3HpMtzik0PCHj_SU-7j8obRGMCQnTC9-9Q3BCevwD0_bk7bLzoP9D29r0WeZTVXouEa_-fp4Xtf_S23UlqfemB9zCwbG_dfQ5iA5oeml8-m5HjMm6-ejSt178u0cvJzwuIOq-bzNTIcX198ipva_Ci8t29fjsnMBc2EC4piHD17nEq"/>
+</div>
+<span class="font-label-md text-on-surface-variant">Elena Vance</span>
+</div>
+<span class="text-label-caps text-outline">Dec 2023</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-white border border-outline-variant p-6 rounded-lg hover:border-primary transition-all group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-3 py-1 rounded text-label-caps uppercase">Economics</span>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+<span class="font-label-caps">2.4k</span>
+</div>
+</div>
+<h3 class="font-h3 text-h3 mb-2 group-hover:text-primary transition-colors">Macroeconomic Policy Dataset</h3>
+<p class="text-body-sm text-on-surface-variant mb-4 line-clamp-2">CSV formatted historical data on GDP fluctuations and interest rate correlations from 1990-2022.</p>
+</div>
+<div class="flex items-center justify-between border-t border-surface-container-high pt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Contributor" data-alt="Close-up portrait of a young professional academic in a bright, minimalist environment. The background features blurred shelves of books in a clean, high-key library setting. The lighting is bright and natural, coming from a large window. The aesthetic is organized and intellectual, with a primary focus on the subject's friendly and reliable expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDx900fEK6uB3yxtHnyVvZJKhW0uREDcewR78HTiaSviJOa3YpSIbMezIAIKBohphre01Zm3Pqgd9D0DHgJO38Hi6WvrLXFt0wIkuMqvLvlQ_NB2hUNnyZuXtqXW4RdUI6eHmBM_US-BDPfFjYQjAidubLxTJvCwVh-oHOOIVMSdLpQcjBylkNByTs40808r7HTteNpjyb4XjA-bwAq_8hczukXksi34cSK6alZs6Ryl7PiOca7ZOlrILGaJdq6a6JnFSmx_mkJyRbC"/>
+</div>
+<span class="font-label-md text-on-surface-variant">Julian Frost</span>
+</div>
+<span class="text-label-caps text-outline">Jan 2024</span>
+</div>
+</div>
+<!-- Item 4 (Large Feature Card) -->
+<div class="bg-white border border-outline-variant p-6 rounded-lg hover:border-primary transition-all group lg:col-span-2 flex flex-col md:flex-row gap-gutter">
+<div class="w-full md:w-1/3 aspect-video bg-surface-container rounded overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro photograph of an open academic textbook with complex diagrams and neat handwritten annotations on the margins. The scene is bathed in cool, natural morning light in a minimalist study space. The color palette is composed of crisp whites, subtle grays, and deep navy blue ink. The overall mood is one of intense focus, intellectual discovery, and organized knowledge." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSGmOB1GGU2vqAXfNMyotesZhi97VXcJonpl81naxlLZqDvqcAIE_Dr5Gj49MwVbri1Z-QQb3NSSk7ztUIKdaFjJuxDsES5zkyKqszVXo41D7JSDkqTe4HfMOtWCtjIE4JPFRL-ccaKJ-V1kBxC3jVm8iiIP_c0cTa36Hxhi6NdJ_TXal6MJ4N5gRPrH2Ym49wwL54y3khUwTnI1xTJNRNM3Awp9noWrHPU74maBAWa0RfGAsKgbUtKLk5mYkxez8cpLgBp-tVR9Bg"/>
+</div>
+<div class="w-full md:w-2/3 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded text-label-caps uppercase">Computer Science</span>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+<span class="font-label-caps">5.1k</span>
+</div>
+</div>
+<h3 class="font-h2 text-h2 mb-2 group-hover:text-primary transition-colors">Distributed Systems Architecture</h3>
+<p class="text-body-md text-on-surface-variant mb-4">A massive compilation of case studies on Byzantine Fault Tolerance, Paxos algorithms, and modern cloud infrastructure scaling patterns used by top-tier tech firms.</p>
+</div>
+<div class="flex items-center justify-between border-t border-surface-container-high pt-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Contributor" data-alt="A portrait of a senior professor in a well-lit, modern campus courtyard. Soft sunlight filters through glass architecture in the background. The style is clean and professional, with a focus on institutional excellence. The color palette features whites and soft blues. The mood is authoritative yet accessible, fitting for a scholarly archive platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5V388E27uG9awbPmVDa9VBeW7Z5sKy7z3gaCA1FU72SreHBQp-YW1-Zdk8SAxut1a0Ad231N-533YGukDk-x-xwk-oz0z_RgRwQ2rhvfYn4ZJDLLQUBpJw4q8LkGFZHo93Lebho_yzy1KIZYK0RN5HcbZbHIaHiN7toW5hKNMp_oJUuyKUcxwRDOxLHhZdI-ZkgvMINay-v09orgvKEdYhAAi0BC4PlVTkPOpzhpT1CjW4J3JGtXEzhGQyg6l7efCnTfGVud74FzX"/>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Prof. Sarah Chen</p>
+<p class="text-label-caps text-outline">MIT Open Courseware</p>
+</div>
+</div>
+<span class="text-label-caps text-outline">Feb 2024</span>
+</div>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="bg-white border border-outline-variant p-6 rounded-lg hover:border-primary transition-all group flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-stack-sm">
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded text-label-caps uppercase">Literature</span>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+<span class="font-label-caps">412</span>
+</div>
+</div>
+<h3 class="font-h3 text-h3 mb-2 group-hover:text-primary transition-colors">Modernist Poetry Analysis</h3>
+<p class="text-body-sm text-on-surface-variant mb-4 line-clamp-2">Thematic breakdown of T.S. Eliot and Ezra Pound works with annotated footnotes on historical context.</p>
+</div>
+<div class="flex items-center justify-between border-t border-surface-container-high pt-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Contributor" data-alt="Professional headshot of a female scholar in a bright, modern office with soft white walls. The person is wearing minimalist glasses and a neutral-toned sweater. The lighting is soft and flattering, creating a high-end, clean academic aesthetic. The background is simple and uncluttered, prioritizing the professional identity of the contributor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbfg-zUC-hRliMsB2cOCFHYADRN-XTi055Y8XOUfsF4LmTZSu9AEdmhINTHhjNkc_N5ePINSCkPYjnAnte2A-T86Jrss3NXUieY4z5WLc4tofe9iXs7uReJCxMvNFqTrDofQbdNNUXz-pQvkBe4nE0OFh6tEbAbQXjaCoKXr7WaXuvvC6v6ZInE3YzKN2m5_nNvRRAwatJ-s02MEk8DhGhwac8jAIit5kJCrBGz1lliXTEA0SNL8_7eb3oOgwo0vKlHsAQxizswulq"/>
+</div>
+<span class="font-label-md text-on-surface-variant">Marcus Aurel</span>
+</div>
+<span class="text-label-caps text-outline">Nov 2023</span>
+</div>
+</div>
+</div>
+<!-- Pagination / Load More -->
+<div class="mt-stack-lg flex justify-center">
+<button class="px-8 py-3 bg-white border border-outline-variant rounded-full font-label-md hover:bg-surface-container-low transition-colors text-on-surface">
+                Load more resources
+            </button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 w-full mt-auto py-12">
+<div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-2">
+<span class="font-bold text-gray-900 dark:text-white">ScholarArchive</span>
+<span class="text-sm font-inter text-gray-500 dark:text-gray-400">© 2024 ScholarArchive Institutional Repository</span>
+</div>
+<div class="flex gap-6">
+<a class="text-sm font-inter text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" href="#">Terms</a>
+<a class="text-sm font-inter text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" href="#">Privacy</a>
+<a class="text-sm font-inter text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" href="#">Documentation</a>
+<a class="text-sm font-inter text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" href="#">Support</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 md:hidden">
+<div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-1 hover:text-blue-500 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-[11px] font-medium font-inter">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg py-1 w-16 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="database" style="font-variation-settings: 'FILL' 1;">database</span>
+<span class="text-[11px] font-medium font-inter">Explore</span>
+</div>
+<div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-1 hover:text-blue-500 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+<span class="text-[11px] font-medium font-inter">Upload</span>
+</div>
+<div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 py-1 hover:text-blue-500 active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[11px] font-medium font-inter">Profile</span>
+</div>
+</nav>
+</body></html>

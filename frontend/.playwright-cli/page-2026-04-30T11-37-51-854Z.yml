@@ -1,0 +1,37 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link [ref=e4] [cursor=pointer]:
+      - /url: /
+    - link "登录" [ref=e6] [cursor=pointer]:
+      - /url: /account.php?action=login
+  - generic [ref=e8]:
+    - generic [ref=e9]: 大物上end3(13).zip
+    - generic [ref=e10]:
+      - table [ref=e12]:
+        - rowgroup [ref=e13]:
+          - row "文件大小：7.8 M 上传时间：2025-12-25 分享用户：18** 运行系统：压缩文件 文件描述：" [ref=e14]:
+            - cell "文件大小：7.8 M 上传时间：2025-12-25 分享用户：18** 运行系统：压缩文件 文件描述：" [ref=e15]:
+              - text: 文件大小：7.8 M
+              - text: 上传时间：2025-12-25
+              - text: 分享用户：18**
+              - text: 运行系统：压缩文件
+              - text: 文件描述：
+            - cell [ref=e16]
+            - cell [ref=e17]
+      - iframe [ref=e21]:
+        - generic [ref=f1e3]:
+          - link "电信下载" [ref=f1e5] [cursor=pointer]:
+            - /url: https://developer2.lanrar.com/file/?BmBTbQg5ADFSW1FpBzJRPVZpV29X7VP1CqoG5wHUWvIE4ADvDNsHNgY+BzUHYFV8AWoHMVYgAS0FeFo1AS1QdwZgU20IOQAxUltRbgc3UW1WPldkVz9TaQo0BjEBb1pvBDwAcQw3ByAGbQdpB2FVZAFtBzRWPgE1BSRaLAEtUGwGNFM0CGcAYVIrUTYHYVF/Vj5XZ1cnU2gKbAYzAW9aaQQ8AGYMZwdkBmUHMwcyVWcBOQcwVj8BOgU3WjkBZVBjBmBTMAg0AGFSNlFmB2VRZlY1V2ZXbVN/CncGaQEtWn0EcQAkDDQHIQY5BzUHblVgAW0HMlY6ATEFNVpuAXtQJQZvU2kIMAAyUjlRNgdkUWdWO1dnVz1TYQo9BjcBbVp1BCoAcQw3Bz8GJwdsB2JVYwFsBzdWOAEyBTBaZQFrUGYGIFNxCCUAI1I5UTYHZFFmVjpXZFc7U2QKNQY0AWhafQRxAD4MIQduBmUHaQd9VWYBbwc7VicBMgUzWm4Bc1BkBjRTKghzADBSa1FwBz1RD1ZvVzlXNVNhCiMGJgEpWiIEdAAyDA4HJgYxB2wHYw==
+          - link "联通下载" [ref=f1e7] [cursor=pointer]:
+            - /url: https://developer2.lanrar.com/file/?BmBTbQg5ADFSW1FpBzJRPVZpV29X7VP1CqoG5wHUWvIE4ADvDNsHNgY+BzUHYFV8AWoHMVYgAS0FeFo1AS1QdwZgU20IOQAxUltRbgc3UW1WPldkVz9TaQo0BjEBb1pvBDwAcQw3ByAGbQdpB2FVZAFtBzRWPgE1BSRaLAEtUGwGNFM0CGcAYVIrUTYHYVF/Vj5XZ1cnU2gKbAYzAW9aaQQ8AGYMZwdkBmUHMwcyVWcBOQcwVj8BOgU3WjkBZVBjBmBTMAg0AGFSNlFmB2VRZlY1V2ZXbVN/CncGaQEtWn0EcQAkDDQHIQY5BzUHblVgAW0HMlY6ATEFNVpuAXtQJQZvU2kIMAAyUjlRNgdkUWdWO1dnVz1TYQo9BjcBbVp1BCoAcQw3Bz8GJwdsB2JVYwFsBzdWOAEyBTBaZQFrUGYGIFNxCCUAI1I5UTYHZFFmVjpXZFc7U2QKNQY0AWhafQRxAD4MIQduBmUHaQd9VWYBbwc7VicBMgUzWm4Bc1BkBjRTKghzADBSa1FwBz1RD1ZvVzlXNVNhCiMGJgEpWiIEdAAyDA4HJgYxB2wHYw==
+          - link "普通下载" [ref=f1e9] [cursor=pointer]:
+            - /url: https://developer2.lanrar.com/file/?BmBTbQg5ADFSW1FpBzJRPVZpV29X7VP1CqoG5wHUWvIE4ADvDNsHNgY+BzUHYFV8AWoHMVYgAS0FeFo1AS1QdwZgU20IOQAxUltRbgc3UW1WPldkVz9TaQo0BjEBb1pvBDwAcQw3ByAGbQdpB2FVZAFtBzRWPgE1BSRaLAEtUGwGNFM0CGcAYVIrUTYHYVF/Vj5XZ1cnU2gKbAYzAW9aaQQ8AGYMZwdkBmUHMwcyVWcBOQcwVj8BOgU3WjkBZVBjBmBTMAg0AGFSNlFmB2VRZlY1V2ZXbVN/CncGaQEtWn0EcQAkDDQHIQY5BzUHblVgAW0HMlY6ATEFNVpuAXtQJQZvU2kIMAAyUjlRNgdkUWdWO1dnVz1TYQo9BjcBbVp1BCoAcQw3Bz8GJwdsB2JVYwFsBzdWOAEyBTBaZQFrUGYGIFNxCCUAI1I5UTYHZFFmVjpXZFc7U2QKNQY0AWhafQRxAD4MIQduBmUHaQd9VWYBbwc7VicBMgUzWm4Bc1BkBjRTKghzADBSa1FwBz1RD1ZvVzlXNVNhCiMGJgEpWiIEdAAyDA4HJgYxB2wHYw==&toolsdown
+  - generic [ref=e22]:
+    - generic [ref=e24]: 反诈提示：刷单兼职，冒充公检法，共享手机屏幕，裸聊敲诈，赌博等都是诈骗，请立即举报
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - text: 版权声明：不得利用云存储发布，存储，淫秽，诈骗等违法信息。
+        - link "侵权/违法投诉" [ref=e27] [cursor=pointer]:
+          - /url: /q/jb/?f=267891248&report=1
+        - text: 或者投诉邮箱：ta@lanzou.com
+      - text: © 2026 Lanzou A

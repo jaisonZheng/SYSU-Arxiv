@@ -1,0 +1,23 @@
+[
+  {
+    "name": "大物真题",
+    "url": "https://wwavx.lanzoum.com/b0139eq99i",
+    "password": "19k8",
+    "files": [
+      {
+        "original_name": "大物上end3(13).zip",
+        "url": "https://wwavx.lanzoum.com/iICyx3egt6ji",
+        "status": "failed",
+        "filename": null,
+        "error": "超时: Timeout 60000ms exceeded while waiting for event \"download\"\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================"
+      },
+      {
+        "original_name": "电磁光学大物期末(57)(1)(2).zip",
+        "url": "https://wwavx.lanzoum.com/iBefQ3egt4qd",
+        "status": "failed",
+        "filename": null,
+        "error": "超时: Timeout 60000ms exceeded while waiting for event \"download\"\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================"
+      }
+    ]
+  }
+]

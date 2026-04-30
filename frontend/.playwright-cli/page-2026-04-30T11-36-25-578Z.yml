@@ -1,0 +1,12 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link:
+        - /url: /
+    - link "登录" [ref=e5] [cursor=pointer]:
+      - /url: /account.php?action=login
+  - generic [ref=e7]:
+    - generic [ref=e8]: 文件受密码保护，请输入密码继续下载
+    - textbox [ref=e11]
+    - button "确认" [ref=e12]
+  - generic [ref=e13]: © 2026 Lanzou

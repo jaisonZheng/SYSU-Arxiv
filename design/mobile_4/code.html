@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>浏览 - SYSU-Arxiv</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#edeeef",
+                      "secondary-fixed-dim": "#c0c1ff",
+                      "on-secondary-fixed-variant": "#2f2ebe",
+                      "on-secondary-container": "#fffbff",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "on-primary-fixed-variant": "#004395",
+                      "on-tertiary-fixed-variant": "#723600",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-bright": "#f8f9fa",
+                      "secondary-fixed": "#e1e0ff",
+                      "tertiary-container": "#b75b00",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#ffb786",
+                      "on-surface": "#191c1d",
+                      "on-background": "#191c1d",
+                      "surface-variant": "#e1e3e4",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#fffbff",
+                      "primary-container": "#2170e4",
+                      "outline-variant": "#c2c6d6",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed": "#ffdcc6",
+                      "surface-tint": "#005ac2",
+                      "primary-fixed": "#d8e2ff",
+                      "secondary-container": "#6063ee",
+                      "surface-container-high": "#e7e8e9",
+                      "on-tertiary-fixed": "#311400",
+                      "on-secondary-fixed": "#07006c",
+                      "surface-dim": "#d9dadb",
+                      "tertiary": "#924700",
+                      "inverse-surface": "#2e3132",
+                      "inverse-primary": "#adc6ff",
+                      "secondary": "#4648d4",
+                      "on-primary-fixed": "#001a42",
+                      "on-primary-container": "#fefcff",
+                      "background": "#f8f9fa",
+                      "surface-container-low": "#f3f4f5",
+                      "primary-fixed-dim": "#adc6ff",
+                      "on-surface-variant": "#424754",
+                      "on-secondary": "#ffffff",
+                      "outline": "#727785",
+                      "on-error-container": "#93000a",
+                      "on-tertiary": "#ffffff",
+                      "inverse-on-surface": "#f0f1f2",
+                      "primary": "#0058be",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-lg": "32px",
+                      "margin-page": "40px",
+                      "stack-sm": "8px",
+                      "container-max": "1280px",
+                      "stack-md": "16px",
+                      "gutter": "24px",
+                      "unit": "4px"
+              },
+              "fontFamily": {
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "h3": [
+                              "Inter"
+                      ],
+                      "h2": [
+                              "Inter"
+                      ],
+                      "h1": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "h3": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "h2": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "h1": [
+                              "30px",
+                              {
+                                      "lineHeight": "38px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-white dark:bg-gray-950 flex justify-between items-center px-4 h-14 w-full sticky top-0 z-50 docked full-width top-0 border-b border-b border-gray-200 dark:border-gray-800 flat no shadows transition-colors duration-200">
+<button class="text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 p-2 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</button>
+<h1 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">SYSU-Arxiv</h1>
+<button class="text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 p-2 rounded-full flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-4 pb-24 md:pb-stack-lg flex flex-col gap-stack-lg pt-4">
+<!-- Search Bar Section -->
+<section class="w-full">
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+</div>
+<input class="w-full bg-surface-container-lowest border border-outline-variant text-on-surface font-body-md text-body-md rounded-lg focus:ring-primary focus:border-primary block pl-10 p-3 shadow-sm placeholder-on-surface-variant transition-colors" placeholder="搜索资源、真题或论文..." type="text"/>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-stack-sm mt-stack-md overflow-x-auto pb-2 scrollbar-hide">
+<div class="grid grid-cols-2 gap-2 mt-stack-md w-full">
+<button class="flex items-center justify-center bg-primary-container text-on-primary-container border border-primary font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors">
+        所有
+    </button>
+<button class="flex items-center justify-center bg-surface-container-low text-on-surface border border-outline-variant hover:bg-surface-container font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors">
+        历年真题
+    </button>
+<button class="flex items-center justify-center bg-surface-container-low text-on-surface border border-outline-variant hover:bg-surface-container font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors">
+        复习资料
+    </button>
+<button class="flex items-center justify-center bg-surface-container-low text-on-surface border border-outline-variant hover:bg-surface-container font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors">
+        科研论文
+    </button>
+<button class="flex items-center justify-center bg-surface-container-low text-on-surface border border-outline-variant hover:bg-surface-container font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors">
+        课程课件
+    </button>
+<button class="flex items-center justify-center bg-surface-container-low text-on-surface border border-outline-variant hover:bg-surface-container font-label-md text-label-md px-4 py-2.5 rounded-lg transition-colors">
+        实验报告
+    </button>
+</div>
+</div>
+</section>
+<!-- Results Feed -->
+<section class="flex flex-col gap-gutter">
+<div class="flex items-center justify-between border-b border-outline-variant pb-2 mb-2">
+<div class="flex gap-4">
+<button class="relative pb-2 text-primary font-label-md text-label-md">
+            最近上传
+            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"></div>
+</button>
+<button class="pb-2 text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">
+            最多次下载
+        </button>
+</div>
+<span class="font-label-caps text-label-caps text-outline">排序</span>
+</div>
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded p-stack-md flex flex-col gap-stack-sm hover:border-outline hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-all">
+<div class="flex justify-between items-start">
+<span class="inline-block bg-surface-container px-2 py-1 rounded font-label-caps text-label-caps text-on-surface">真题</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">2天前</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface leading-tight mt-1">2023 高等数学期末试卷 A</h3>
+<div class="flex items-center gap-stack-sm mt-auto pt-2">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="person">person</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">上传者: Li Ming</span>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded p-stack-md flex flex-col gap-stack-sm hover:border-outline hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-all">
+<div class="flex justify-between items-start">
+<span class="inline-block bg-primary-fixed px-2 py-1 rounded font-label-caps text-label-caps text-on-primary-fixed">论文</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">1周前</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface leading-tight mt-1">机器学习在流体力学中的应用：综述</h3>
+<div class="flex items-center gap-stack-sm mt-auto pt-2">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="person">person</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">上传者: Dr. Wang</span>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded p-stack-md flex flex-col gap-stack-sm hover:border-outline hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-all">
+<div class="flex justify-between items-start">
+<span class="inline-block bg-surface-container px-2 py-1 rounded font-label-caps text-label-caps text-on-surface">复习资料</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">2023年10月15日</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface leading-tight mt-1">数据结构全面笔记与备忘录</h3>
+<div class="flex items-center gap-stack-sm mt-auto pt-2">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="person">person</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">上传者: CS学习小组</span>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded p-stack-md flex flex-col gap-stack-sm hover:border-outline hover:shadow-[0px_4px_12px_rgba(0,0,0,0.05)] transition-all">
+<div class="flex justify-between items-start">
+<span class="inline-block bg-surface-container px-2 py-1 rounded font-label-caps text-label-caps text-on-surface">真题</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">2023年9月2日</span>
+</div>
+<h3 class="font-h3 text-h3 text-on-surface leading-tight mt-1">2022 大学物理期中试卷 B</h3>
+<div class="flex items-center gap-stack-sm mt-auto pt-2">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="person">person</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">上传者: 匿名</span>
+</div>
+</article>
+</section>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center h-16 px-2 bg-white/80 backdrop-blur-md bg-white dark:bg-gray-950 docked full-width bottom-0 border-t border-t border-gray-200 dark:border-gray-800 flat no shadows active:opacity-70 transition-all">
+<a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 pt-1 hover:text-blue-500 dark:hover:text-blue-300 w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-inter text-[11px] font-medium">首页</span>
+</a>
+<!-- Active Tab: Explore -->
+<a class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 border-t-2 border-blue-600 pt-1 w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="explore" style="font-variation-settings: 'FILL' 1;">explore</span>
+<span class="font-inter text-[11px] font-medium text-blue-600 dark:text-blue-400">浏览</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 pt-1 hover:text-blue-500 dark:hover:text-blue-300 w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="add_circle">add_circle</span>
+<span class="font-inter text-[11px] font-medium">上传</span>
+</a>
+<a class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 pt-1 hover:text-blue-500 dark:hover:text-blue-300 w-full" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="bookmark">bookmark</span>
+<span class="font-inter text-[11px] font-medium">已保存</span>
+</a>
+</nav>
+</body></html>

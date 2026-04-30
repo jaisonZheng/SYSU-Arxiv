@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Explore - AcademiaArchive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#727785",
+                      "secondary-fixed": "#e1e0ff",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed-dim": "#c0c1ff",
+                      "primary-fixed": "#d8e2ff",
+                      "on-primary-fixed-variant": "#004395",
+                      "on-secondary": "#ffffff",
+                      "on-background": "#191c1d",
+                      "surface-container": "#edeeef",
+                      "primary": "#0058be",
+                      "surface-container-low": "#f3f4f5",
+                      "surface-container-highest": "#e1e3e4",
+                      "primary-fixed-dim": "#adc6ff",
+                      "on-tertiary-container": "#fffbff",
+                      "surface-bright": "#f8f9fa",
+                      "secondary": "#4648d4",
+                      "outline-variant": "#c2c6d6",
+                      "on-surface-variant": "#424754",
+                      "on-primary-fixed": "#001a42",
+                      "on-error": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb786",
+                      "tertiary": "#924700",
+                      "on-tertiary-fixed-variant": "#723600",
+                      "surface-tint": "#005ac2",
+                      "on-secondary-fixed-variant": "#2f2ebe",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#e1e3e4",
+                      "on-primary-container": "#fefcff",
+                      "on-tertiary-fixed": "#311400",
+                      "background": "#f8f9fa",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#2170e4",
+                      "surface-container-high": "#e7e8e9",
+                      "inverse-on-surface": "#f0f1f2",
+                      "tertiary-container": "#b75b00",
+                      "on-secondary-container": "#fffbff",
+                      "inverse-primary": "#adc6ff",
+                      "tertiary-fixed": "#ffdcc6",
+                      "surface-dim": "#d9dadb",
+                      "on-surface": "#191c1d",
+                      "secondary-container": "#6063ee",
+                      "inverse-surface": "#2e3132",
+                      "on-secondary-fixed": "#07006c",
+                      "surface": "#f8f9fa"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-lg": "32px",
+                      "container-max": "1280px",
+                      "unit": "4px",
+                      "margin-page": "40px",
+                      "stack-sm": "8px",
+                      "gutter": "24px",
+                      "stack-md": "16px"
+              },
+              "fontFamily": {
+                      "body-sm": ["Inter"],
+                      "label-md": ["Inter"],
+                      "h3": ["Inter"],
+                      "h2": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-caps": ["Inter"],
+                      "h1": ["Inter"]
+              },
+              "fontSize": {
+                      "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                      "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                      "h3": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                      "h2": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                      "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                      "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                      "h1": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600" }]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        /* Base styles mapping to DS tokens */
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<nav class="bg-white dark:bg-gray-900 font-sans text-sm tracking-tight font-medium border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50 w-full shadow-sm">
+<div class="flex items-center justify-between px-8 w-full h-16 max-w-screen-2xl mx-auto">
+<!-- Brand -->
+<div class="flex items-center gap-8 h-full">
+<a class="text-xl font-bold text-gray-900 dark:text-white tracking-tighter flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-blue-600" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+                    AcademiaArchive
+                </a>
+<!-- Search Bar (on_left) -->
+<div class="relative hidden lg:flex items-center w-80">
+<span class="material-symbols-outlined absolute left-3 text-gray-400 text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 placeholder-gray-500" placeholder="Search resources, authors, datasets..." type="text"/>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex items-end h-full gap-6">
+<!-- Active Item -->
+<li class="h-full flex items-end">
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-4 mt-4 px-1 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 opacity-80 transition-all font-semibold" href="#">Explore</a>
+</li>
+<!-- Inactive Items -->
+<li class="h-full flex items-center">
+<a class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 px-3 py-2 rounded-md" href="#">Upload</a>
+</li>
+<li class="h-full flex items-center">
+<a class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 px-3 py-2 rounded-md" href="#">Departments</a>
+</li>
+<li class="h-full flex items-center">
+<a class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 px-3 py-2 rounded-md" href="#">Library</a>
+</li>
+</ul>
+<!-- Trailing Icons & Profile -->
+<div class="flex items-center gap-4">
+<button class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300 ml-2">
+<img alt="Researcher Profile" class="w-full h-full object-cover" data-alt="A close-up studio portrait of a young academic professional. The lighting is soft and high-key, creating a clean, modern aesthetic with a bright white background. The subject is wearing understated, professional attire. The overall mood is intelligent, approachable, and focused, perfectly suited for an institutional profile avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBpIeRWnWLwXcrawEAJhJ6Xkb_wKc3ZMwB0U3cykwa5PPLqzmAf5amvm_ooVKdYmffjKTFrnA1FZiYWG-8cDjiuqebQaaaJXNWXmYwdIFrabtgqMbqw-Ly3dCA52opgaWREEnw6L_7E1Wou8X5VbheJbybR2FNM4DsI6ebgjaeIDhmF2cR8tGSHb2lIWpuTCuUenBpwjWJOhCvjiH7hxoR7kgJsA6rZFJeqdND70c35H7YTgP3MFYkArq7Mzw6dxL0hY0h_Lm4Ud2d"/>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Layout Wrapper -->
+<div class="flex-1 flex flex-row w-full max-w-screen-2xl mx-auto">
+<!-- SideNavBar (Shared Component) -->
+<aside class="bg-gray-50 dark:bg-gray-950 h-full w-64 border-r border-gray-200 dark:border-gray-800 flex flex-col gap-1 p-4 h-screen sticky top-16 shrink-0 hidden md:flex">
+<div class="mb-6 px-3">
+<h2 class="text-lg font-black text-gray-900 dark:text-white tracking-tight">Navigation</h2>
+<p class="text-[13px] text-gray-500 font-medium mt-0.5">Academic Portal</p>
+</div>
+<nav class="flex flex-col gap-1 font-sans text-[13px] font-medium">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-md transition-all scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined text-[20px]">home</span>
+                    Home
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-md transition-all scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined text-[20px]">folder_open</span>
+                    Collections
+                </a>
+<!-- Active (Datasets aligns best with Explore materials intent in HF context) -->
+<a class="flex items-center gap-3 px-3 py-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md transition-all scale-95 active:scale-100 font-semibold" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">database</span>
+                    Datasets
+                </a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-md transition-all scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+                    Authors
+                </a>
+<div class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-800">
+<a class="flex items-center gap-3 px-3 py-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-md transition-all scale-95 active:scale-100" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                        Settings
+                    </a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface-bright">
+<!-- Page Header -->
+<header class="px-gutter pt-stack-lg pb-stack-md border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-stack-sm">
+<h1 class="font-h1 text-h1 text-on-background">Explore Study Materials</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">Discover and download lecture notes, datasets, and examination materials contributed by researchers and students across departments.</p>
+<!-- Quick Search/Sort row -->
+<div class="flex items-center justify-between mt-stack-md pt-stack-md border-t border-outline-variant/30">
+<div class="text-label-md font-label-md text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">data_usage</span>
+<strong>12,408</strong> resources found
+                    </div>
+<div class="flex items-center gap-4">
+<label class="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+                            Sort by:
+                            <select class="bg-surface-container-lowest border border-outline-variant rounded text-on-surface text-sm py-1.5 pl-3 pr-8 focus:ring-primary focus:border-primary">
+<option>Most Downloaded</option>
+<option>Recently Added</option>
+<option>Highest Rated</option>
+</select>
+</label>
+</div>
+</div>
+</header>
+<!-- Layout Split: Filters & Grid -->
+<div class="flex flex-1 p-gutter gap-gutter items-start">
+<!-- Contextual Filters Sidebar -->
+<div class="w-64 shrink-0 flex flex-col gap-stack-lg sticky top-32">
+<!-- Filter Group 1 -->
+<div class="flex flex-col gap-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-2">Subject Area</h3>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Mathematics</span>
+<span class="ml-auto text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">2.1k</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Physics</span>
+<span class="ml-auto text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">1.8k</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Computer Science</span>
+<span class="ml-auto text-xs text-on-surface-variant bg-primary-fixed text-on-primary-fixed-variant px-1.5 py-0.5 rounded">4.5k</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Biology</span>
+<span class="ml-auto text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">890</span>
+</label>
+<button class="text-left font-label-md text-label-md text-primary mt-1 hover:underline">Show 12 more...</button>
+</div>
+<hr class="border-outline-variant/50"/>
+<!-- Filter Group 2 -->
+<div class="flex flex-col gap-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-2">Material Type</h3>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Lecture Notes</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Exam Archive</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Datasets</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">Lab Reports</span>
+</label>
+</div>
+<hr class="border-outline-variant/50"/>
+<!-- Filter Group 3 -->
+<div class="flex flex-col gap-stack-sm">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-2">Academic Year</h3>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 border-outline-variant text-primary focus:ring-primary bg-surface-container-lowest" name="year_filter" type="radio"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">2023 - 2024</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 border-outline-variant text-primary focus:ring-primary bg-surface-container-lowest" name="year_filter" type="radio"/>
+<span class="font-body-sm text-body-sm text-on-surface group-hover:text-primary transition-colors">2022 - 2023</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 border-outline-variant text-primary focus:ring-primary bg-surface-container-lowest" name="year_filter" type="radio"/>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">All Time</span>
+</label>
+</div>
+</div>
+<!-- Resource Grid (Hugging Face Inspired Cards) -->
+<div class="flex-1 grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md flex flex-col hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-200" href="#">
+<div class="flex items-start justify-between mb-3">
+<div class="flex items-center gap-2 text-on-background">
+<span class="material-symbols-outlined text-primary text-[22px]">description</span>
+<h3 class="font-h3 text-h3 leading-tight group-hover:text-primary transition-colors">Calculus II: Multivariable Fundamentals</h3>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">Complete lecture notes covering vector calculus, partial derivatives, and multiple integrals. Includes worked examples from Fall 2023.</p>
+<div class="mt-auto pt-4 flex flex-col gap-3">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-caps text-[10px] uppercase tracking-wider">Mathematics</span>
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-[10px] uppercase tracking-wider">Lecture Notes</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-xs border-t border-outline-variant/30 pt-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">account_circle</span>
+<span>Prof. Sarah Jenkins</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1" title="Downloads"><span class="material-symbols-outlined text-[14px]">download</span> 12.4k</span>
+<span class="flex items-center gap-1" title="Updated"><span class="material-symbols-outlined text-[14px]">history</span> 2mo ago</span>
+</div>
+</div>
+</div>
+</a>
+<!-- Card 2 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md flex flex-col hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-200" href="#">
+<div class="flex items-start justify-between mb-3">
+<div class="flex items-center gap-2 text-on-background">
+<span class="material-symbols-outlined text-tertiary text-[22px]">database</span>
+<h3 class="font-h3 text-h3 leading-tight group-hover:text-primary transition-colors">Quantum Mechanics Experimental Data</h3>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">Raw and processed dataset from the double-slit interference experiments conducted in the Advanced Physics Lab.</p>
+<div class="mt-auto pt-4 flex flex-col gap-3">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-[10px] uppercase tracking-wider">Physics</span>
+<span class="inline-flex items-center px-2 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-caps text-[10px] uppercase tracking-wider">Dataset</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-xs border-t border-outline-variant/30 pt-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">group</span>
+<span>Physics Dept Lab Group</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1" title="Downloads"><span class="material-symbols-outlined text-[14px]">download</span> 3.1k</span>
+<span class="flex items-center gap-1" title="Updated"><span class="material-symbols-outlined text-[14px]">history</span> 5d ago</span>
+</div>
+</div>
+</div>
+</a>
+<!-- Card 3 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md flex flex-col hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-200" href="#">
+<div class="flex items-start justify-between mb-3">
+<div class="flex items-center gap-2 text-on-background">
+<span class="material-symbols-outlined text-secondary text-[22px]">folder_special</span>
+<h3 class="font-h3 text-h3 leading-tight group-hover:text-primary transition-colors">CS301: Data Structures Master Archive</h3>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">A comprehensive collection of syllabus, past exam papers, and solution sets for Data Structures and Algorithms.</p>
+<div class="mt-auto pt-4 flex flex-col gap-3">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-caps text-[10px] uppercase tracking-wider">Comp Sci</span>
+<span class="inline-flex items-center px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-[10px] uppercase tracking-wider">Exam Archive</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-xs border-t border-outline-variant/30 pt-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">account_circle</span>
+<span>Student Union Reps</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1" title="Downloads"><span class="material-symbols-outlined text-[14px]">download</span> 28.9k</span>
+<span class="flex items-center gap-1" title="Updated"><span class="material-symbols-outlined text-[14px]">history</span> 1yr ago</span>
+</div>
+</div>
+</div>
+</a>
+<!-- Card 4 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-lg p-stack-md flex flex-col hover:border-primary hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] transition-all duration-200" href="#">
+<div class="flex items-start justify-between mb-3">
+<div class="flex items-center gap-2 text-on-background">
+<span class="material-symbols-outlined text-primary text-[22px]">description</span>
+<h3 class="font-h3 text-h3 leading-tight group-hover:text-primary transition-colors">Organic Chemistry Synthesis Pathways</h3>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4 line-clamp-2">Detailed visual maps and annotations for common organic synthesis reactions. Highly recommended for final year revision.</p>
+<div class="mt-auto pt-4 flex flex-col gap-3">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-[10px] uppercase tracking-wider">Chemistry</span>
+<span class="inline-flex items-center px-2 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-caps text-[10px] uppercase tracking-wider">Study Guide</span>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-xs border-t border-outline-variant/30 pt-3">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">account_circle</span>
+<span>Dr. Alan Turing (Guest)</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="flex items-center gap-1" title="Downloads"><span class="material-symbols-outlined text-[14px]">download</span> 8.2k</span>
+<span class="flex items-center gap-1" title="Updated"><span class="material-symbols-outlined text-[14px]">history</span> 3w ago</span>
+</div>
+</div>
+</div>
+</a>
+</div>
+</div>
+<!-- Pagination (Simple functional flat style) -->
+<div class="flex justify-center py-stack-lg border-t border-outline-variant/30 mt-auto">
+<nav class="flex items-center gap-2">
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface disabled:opacity-50 transition-colors" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-on-primary font-label-md text-label-md">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-transparent hover:border-outline-variant text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-transparent hover:border-outline-variant text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">3</button>
+<span class="text-on-surface-variant mx-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-transparent hover:border-outline-variant text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors">12</button>
+<button class="p-2 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</nav>
+</div>
+</main>
+</div>
+</body></html>
