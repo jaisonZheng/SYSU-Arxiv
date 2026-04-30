@@ -66,25 +66,7 @@ func runMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_materials_year ON materials(year)`,
 		`CREATE INDEX IF NOT EXISTS idx_materials_sub_category ON materials(sub_category)`,
 		`CREATE INDEX IF NOT EXISTS idx_materials_created_at ON materials(created_at)`,
-		`CREATE VIRTUAL TABLE IF NOT EXISTS materials_fts USING fts5(
-			title, description, course_name, instructor,
-			content='materials',
-			content_rowid='id'
-		)`,
-		`CREATE TRIGGER IF NOT EXISTS materials_fts_insert AFTER INSERT ON materials BEGIN
-			INSERT INTO materials_fts(rowid, title, description, course_name, instructor)
-			VALUES (new.id, new.title, new.description, new.course_name, new.instructor);
-		END`,
-		`CREATE TRIGGER IF NOT EXISTS materials_fts_update AFTER UPDATE ON materials BEGIN
-			INSERT INTO materials_fts(materials_fts, rowid, title, description, course_name, instructor)
-			VALUES ('delete', old.id, old.title, old.description, old.course_name, old.instructor);
-			INSERT INTO materials_fts(rowid, title, description, course_name, instructor)
-			VALUES (new.id, new.title, new.description, new.course_name, new.instructor);
-		END`,
-		`CREATE TRIGGER IF NOT EXISTS materials_fts_delete AFTER DELETE ON materials BEGIN
-			INSERT INTO materials_fts(materials_fts, rowid, title, description, course_name, instructor)
-			VALUES ('delete', old.id, old.title, old.description, old.course_name, old.instructor);
-		END`,
+		`CREATE INDEX IF NOT EXISTS idx_materials_search ON materials(title, description, course_name, instructor)`,
 	}
 
 	for i, m := range migrations {

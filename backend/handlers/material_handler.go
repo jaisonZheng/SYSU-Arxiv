@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -104,7 +105,7 @@ func (h *MaterialHandler) GetMaterial(c *gin.Context) {
 		return
 	}
 
-	related, _ := h.store.GetRelatedMaterials(id, m.CourseName, 4)
+	related, _ := h.store.GetRelatedMaterials(id, m.CourseName.String, 4)
 
 	c.JSON(http.StatusOK, gin.H{
 		"material": m,
@@ -144,17 +145,17 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		Title:        c.PostForm("title"),
 		Description:  c.PostForm("description"),
 		Category:     c.PostForm("category"),
-		SubCategory:  c.PostForm("sub_category"),
-		Department:   c.PostForm("department"),
-		Major:        c.PostForm("major"),
-		CourseName:   c.PostForm("course_name"),
-		Instructor:   c.PostForm("instructor"),
-		FileType:     c.PostForm("file_type"),
-		UploaderName: c.PostForm("uploader_name"),
+		SubCategory:  sql.NullString{String: c.PostForm("sub_category"), Valid: c.PostForm("sub_category") != ""},
+		Department:   sql.NullString{String: c.PostForm("department"), Valid: c.PostForm("department") != ""},
+		Major:        sql.NullString{String: c.PostForm("major"), Valid: c.PostForm("major") != ""},
+		CourseName:   sql.NullString{String: c.PostForm("course_name"), Valid: c.PostForm("course_name") != ""},
+		Instructor:   sql.NullString{String: c.PostForm("instructor"), Valid: c.PostForm("instructor") != ""},
+		FileType:     sql.NullString{String: c.PostForm("file_type"), Valid: c.PostForm("file_type") != ""},
+		UploaderName: sql.NullString{String: c.PostForm("uploader_name"), Valid: c.PostForm("uploader_name") != ""},
 		FileName:     fileName,
 		FilePath:     filePath,
 		FileSize:     fileSize,
-		MimeType:     header.Header.Get("Content-Type"),
+		MimeType:     sql.NullString{String: header.Header.Get("Content-Type"), Valid: header.Header.Get("Content-Type") != ""},
 		IsZipPackage: false,
 	}
 
@@ -169,8 +170,8 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		}
 	}
 
-	if m.FileType == "" {
-		m.FileType = fileExt
+	if m.FileType.String == "" {
+		m.FileType = sql.NullString{String: fileExt, Valid: true}
 	}
 
 	id, err := h.store.Create(m)
@@ -212,17 +213,17 @@ func (h *MaterialHandler) CreateZipPackage(c *gin.Context) {
 		Title:        c.PostForm("title"),
 		Description:  c.PostForm("description"),
 		Category:     c.PostForm("category"),
-		SubCategory:  c.PostForm("sub_category"),
-		Department:   c.PostForm("department"),
-		Major:        c.PostForm("major"),
-		CourseName:   c.PostForm("course_name"),
-		Instructor:   c.PostForm("instructor"),
-		FileType:     "zip",
-		UploaderName: c.PostForm("uploader_name"),
+		SubCategory:  sql.NullString{String: c.PostForm("sub_category"), Valid: c.PostForm("sub_category") != ""},
+		Department:   sql.NullString{String: c.PostForm("department"), Valid: c.PostForm("department") != ""},
+		Major:        sql.NullString{String: c.PostForm("major"), Valid: c.PostForm("major") != ""},
+		CourseName:   sql.NullString{String: c.PostForm("course_name"), Valid: c.PostForm("course_name") != ""},
+		Instructor:   sql.NullString{String: c.PostForm("instructor"), Valid: c.PostForm("instructor") != ""},
+		FileType:     sql.NullString{String: "zip", Valid: true},
+		UploaderName: sql.NullString{String: c.PostForm("uploader_name"), Valid: c.PostForm("uploader_name") != ""},
 		FileName:     fileName,
 		FilePath:     filePath,
 		FileSize:     fileSize,
-		MimeType:     "application/zip",
+		MimeType:     sql.NullString{String: "application/zip", Valid: true},
 		IsZipPackage: true,
 	}
 
@@ -271,8 +272,8 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 	h.store.IncrementDownloadCount(id)
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", m.FileName))
-	c.Header("Content-Type", m.MimeType)
-	if m.MimeType == "" {
+	c.Header("Content-Type", m.MimeType.String)
+	if m.MimeType.String == "" {
 		c.Header("Content-Type", "application/octet-stream")
 	}
 	c.Header("Content-Length", fmt.Sprintf("%d", m.FileSize))

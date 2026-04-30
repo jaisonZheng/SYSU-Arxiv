@@ -76,35 +76,10 @@ func (s *MaterialStore) List(filter *models.MaterialFilter) ([]models.Material, 
 		args = append(args, filter.FileType)
 	}
 
-	searchIDs := []int64{}
 	if filter.Search != "" {
-		rows, err := DB.Query(`
-			SELECT rowid FROM materials_fts
-			WHERE materials_fts MATCH ?
-		`, filter.Search)
-		if err != nil {
-			return nil, 0, err
-		}
-		defer rows.Close()
-		for rows.Next() {
-			var id int64
-			if err := rows.Scan(&id); err != nil {
-				return nil, 0, err
-			}
-			searchIDs = append(searchIDs, id)
-		}
-		if len(searchIDs) > 0 {
-			placeholders := make([]string, len(searchIDs))
-			for i := range searchIDs {
-				placeholders[i] = "?"
-			}
-			where = append(where, fmt.Sprintf("id IN (%s)", strings.Join(placeholders, ",")))
-			for _, id := range searchIDs {
-				args = append(args, id)
-			}
-		} else {
-			where = append(where, "id IN (-1)")
-		}
+		searchTerm := "%" + filter.Search + "%"
+		where = append(where, "(title LIKE ? OR description LIKE ? OR course_name LIKE ? OR instructor LIKE ?)")
+		args = append(args, searchTerm, searchTerm, searchTerm, searchTerm)
 	}
 
 	var total int64
