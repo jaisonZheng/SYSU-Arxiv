@@ -2,15 +2,22 @@ const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 async function fetchJSON(path, options = {}) {
   const url = `${API_BASE}${path}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      ...(options.headers || {}),
-    },
-  });
+  const fetchOpts = { ...options };
+  // Don't set Content-Type for FormData; browser sets it with boundary
+  if (fetchOpts.body instanceof FormData) {
+    delete fetchOpts.headers;
+  }
+  const res = await fetch(url, fetchOpts);
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const text = await res.text();
+    let err;
+    try {
+      const parsed = JSON.parse(text);
+      err = parsed.error || parsed.message || text;
+    } catch {
+      err = text || `HTTP ${res.status}`;
+    }
+    throw new Error(err);
   }
   return res.json();
 }
@@ -59,4 +66,9 @@ export const api = {
   previewPackageItem: (id, path) => `${API_BASE}/api/packages/${id}/preview/${encodeURIComponent(path)}`,
 
   getPackageCourses: () => fetchJSON('/api/packages/courses'),
+
+  createZipPackage: (formData) => fetchJSON('/api/packages', {
+    method: 'POST',
+    body: formData,
+  }),
 };

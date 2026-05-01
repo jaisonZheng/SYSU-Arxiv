@@ -138,6 +138,15 @@ func (s *PackageStore) IncrementDownloadCount(id int64) error {
 	return err
 }
 
+func (s *PackageStore) CreateItem(item *models.PackageItem) error {
+	_, err := DB.Exec(`
+		INSERT INTO package_items (package_id, path, file_name, file_size, file_type, mime_type)
+		VALUES (?, ?, ?, ?, ?, ?)`,
+		item.PackageID, item.Path, item.FileName, item.FileSize, item.FileType, item.MimeType,
+	)
+	return err
+}
+
 func (s *PackageStore) GetDistinctCourses() ([]string, error) {
 	rows, err := DB.Query("SELECT DISTINCT course_name FROM course_packages WHERE course_name IS NOT NULL AND course_name != '' ORDER BY course_name")
 	if err != nil {

@@ -171,8 +171,8 @@ export default function Home() {
             className="bg-white border border-gray-200 rounded-lg p-5 hover:border-gray-300 hover:shadow-sm transition-all flex flex-col justify-between group cursor-pointer h-40"
           >
             <div className="flex justify-between items-start">
-              <span className="bg-gray-100 text-gray-700 text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded">资料</span>
               <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
+              <span className="bg-gray-100 text-gray-700 text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded">资料</span>
             </div>
             <div className="text-left">
               <h3 className="text-base font-semibold text-gray-900 mb-1 text-left">学习资料</h3>
@@ -298,9 +298,12 @@ export default function Home() {
                     )}
                     {m.sub_category && (
                       <span className="text-xs text-gray-400">
+                        {m.sub_category === 'past_exam' && '试卷真题'}
                         {m.sub_category === 'lecture' && '课件'}
                         {m.sub_category === 'notes' && '笔记'}
                         {m.sub_category === 'mock_exam' && '模拟题'}
+                        {m.sub_category === 'exam_answer' && '试卷答案'}
+                        {m.sub_category === 'textbook_answer' && '教材答案'}
                         {m.sub_category === 'summary' && '总结'}
                         {m.sub_category === 'other' && '其它'}
                       </span>

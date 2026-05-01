@@ -10,9 +10,12 @@ const categories = [
 
 const subCategories = [
   { value: '', label: '选择类型...' },
+  { value: 'past_exam', label: '试卷真题' },
   { value: 'lecture', label: '课件' },
   { value: 'notes', label: '笔记' },
   { value: 'mock_exam', label: '模拟题' },
+  { value: 'exam_answer', label: '试卷答案' },
+  { value: 'textbook_answer', label: '教材答案' },
   { value: 'summary', label: '总结' },
   { value: 'other', label: '其它' },
 ]
@@ -82,10 +85,17 @@ export default function UploadPage() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    setForm((prev) => {
+      const next = { ...prev, [name]: type === 'checkbox' ? checked : value }
+      if (name === 'category') {
+        if (value === 'past_exam') {
+          next.sub_category = 'past_exam'
+        } else if (prev.sub_category === 'past_exam') {
+          next.sub_category = ''
+        }
+      }
+      return next
+    })
   }
 
   const checkDuplicates = async () => {
@@ -104,13 +114,18 @@ export default function UploadPage() {
     return false
   }
 
+  const validateForm = () => {
+    const errors = []
+    if (files.length === 0) errors.push('请至少选择一个文件')
+    if (!form.title.trim()) errors.push('请填写标题')
+    if (!form.category) errors.push('请选择分类')
+    return errors
+  }
+
   const handleSubmit = async () => {
-    if (files.length === 0) {
-      alert('请至少选择一个文件')
-      return
-    }
-    if (!form.category) {
-      alert('请选择分类')
+    const errors = validateForm()
+    if (errors.length > 0) {
+      setUploadResult({ success: false, error: errors.join('；') })
       return
     }
 
@@ -148,8 +163,22 @@ export default function UploadPage() {
       }
       setUploadResult({ success: true, results })
       setFiles([])
+      setForm({
+        title: '',
+        description: '',
+        category: '',
+        sub_category: '',
+        department: '',
+        major: '',
+        course_name: '',
+        instructor: '',
+        year: '',
+        file_type: '',
+        uploader_name: '',
+        is_zip_package: false,
+      })
     } catch (e) {
-      setUploadResult({ success: false, error: e.message })
+      setUploadResult({ success: false, error: e.message || '上传失败，请稍后重试' })
     } finally {
       setUploading(false)
       setShowDuplicateModal(false)
@@ -320,7 +349,7 @@ export default function UploadPage() {
             disabled={uploading || files.length === 0}
             className="px-5 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {uploading ? '上传中...' : '提交资源'}
+            {uploading ? '上传中...' : '贡献资源'}
           </button>
         </div>
       </div>

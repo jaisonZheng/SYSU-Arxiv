@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"archive/zip"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,6 +34,7 @@ func (h *PackageHandler) RegisterRoutes(r *gin.Engine) {
 		api.GET("/packages/:id/download", h.DownloadPackage)
 		api.GET("/packages/:id/preview/*path", h.PreviewPackageItem)
 		api.GET("/packages/courses", h.GetPackageCourses)
+		api.POST("/packages", h.CreatePackage)
 	}
 }
 
@@ -219,4 +221,95 @@ func (h *PackageHandler) GetPackageCourses(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"courses": courses})
+}
+
+func (h *PackageHandler) CreatePackage(c *gin.Context) {
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请选择要上传的文件"})
+		return
+	}
+	defer file.Close()
+
+	fileName := header.Filename
+	fileExt := strings.ToLower(filepath.Ext(fileName))
+
+	if fileExt != ".zip" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "资源包仅支持 ZIP 格式"})
+		return
+	}
+
+	filePath, fileSize, err := h.storage.SaveFile(file, header, "packages")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存文件失败: " + err.Error()})
+		return
+	}
+
+	// Parse zip to count files and create items
+	zr, err := zip.OpenReader(h.storage.ResolvePath(filePath))
+	if err != nil {
+		h.storage.DeleteFile(filePath)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开 ZIP 文件: " + err.Error()})
+		return
+	}
+	defer zr.Close()
+
+	totalFiles := 0
+	items := []models.PackageItem{}
+	for _, f := range zr.File {
+		if f.FileInfo().IsDir() {
+			continue
+		}
+		totalFiles++
+		ext := strings.ToLower(filepath.Ext(f.Name))
+		items = append(items, models.PackageItem{
+			Path:     f.Name,
+			FileName: filepath.Base(f.Name),
+			FileSize: int64(f.UncompressedSize64),
+			FileType: ext,
+		})
+	}
+
+	p := &models.CoursePackage{
+		Title:       c.PostForm("title"),
+		Description: c.PostForm("description"),
+		CourseName:  c.PostForm("course_name"),
+		SourceType:  "user_upload",
+		FileName:    fileName,
+		FilePath:    filePath,
+		FileSize:    fileSize,
+		TotalFiles:  totalFiles,
+	}
+
+	if p.Title == "" {
+		p.Title = strings.TrimSuffix(fileName, fileExt)
+	}
+
+	if dept := c.PostForm("department"); dept != "" {
+		p.Department = sql.NullString{String: dept, Valid: true}
+	}
+
+	if p.CourseName == "" {
+		p.CourseName = "未分类"
+	}
+
+	id, err := h.store.Create(p)
+	if err != nil {
+		h.storage.DeleteFile(filePath)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建资源包记录失败: " + err.Error()})
+		return
+	}
+
+	// Create package items
+	for _, item := range items {
+		item.PackageID = id
+		if err := h.store.CreateItem(&item); err != nil {
+			fmt.Printf("failed to create package item: %v\n", err)
+		}
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":      id,
+		"message": "upload successful",
+	})
 }

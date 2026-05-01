@@ -6,9 +6,12 @@ import ResourceCard from '../components/ResourceCard'
 
 const subCategories = [
   { value: '', label: '全部类型' },
+  { value: 'past_exam', label: '试卷真题' },
   { value: 'lecture', label: '课件' },
   { value: 'notes', label: '笔记' },
   { value: 'mock_exam', label: '模拟题' },
+  { value: 'exam_answer', label: '试卷答案' },
+  { value: 'textbook_answer', label: '教材答案' },
   { value: 'summary', label: '总结' },
   { value: 'other', label: '其它' },
 ]
@@ -38,7 +41,7 @@ export default function Explore({ category, title }) {
     year: searchParams.get('year') || '',
     sort: searchParams.get('sort') || 'download_count:desc',
     page: parseInt(searchParams.get('page') || '1', 10),
-    page_size: 20,
+    page_size: 24,
   }), [searchParams, category])
 
   const [filters, setFilters] = useState(buildFilters)

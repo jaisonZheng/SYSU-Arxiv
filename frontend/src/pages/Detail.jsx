@@ -364,7 +364,16 @@ export default function Detail({ isPackage }) {
               {!isPackage && m.sub_category && (
                 <div className="flex justify-between items-center py-1">
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">类型</span>
-                  <span className="text-sm text-gray-900 font-medium capitalize">{m.sub_category}</span>
+                  <span className="text-sm text-gray-900 font-medium">
+                    {m.sub_category === 'past_exam' && '试卷真题'}
+                    {m.sub_category === 'lecture' && '课件'}
+                    {m.sub_category === 'notes' && '笔记'}
+                    {m.sub_category === 'mock_exam' && '模拟题'}
+                    {m.sub_category === 'exam_answer' && '试卷答案'}
+                    {m.sub_category === 'textbook_answer' && '教材答案'}
+                    {m.sub_category === 'summary' && '总结'}
+                    {m.sub_category === 'other' && '其它'}
+                  </span>
                 </div>
               )}
               {isPackage && m.source_type && (

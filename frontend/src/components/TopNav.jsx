@@ -19,10 +19,8 @@ export default function TopNav() {
         {/* Left: Logo + Search */}
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded bg-primary text-white flex items-center justify-center font-bold text-sm">
-              S
-            </div>
-            <span className="text-sm font-bold text-gray-900 tracking-tight">SYSU-Arxiv</span>
+            <img src="/logo-nav.png" alt="" className="h-9 w-auto" />
+            <span className="text-base font-bold text-gray-900 tracking-tight">SYSU-Arxiv</span>
           </Link>
 
           <form onSubmit={handleSearch} className="relative hidden md:flex items-center w-80">
@@ -52,9 +50,6 @@ export default function TopNav() {
           <button className="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-50 transition-colors">
             <HelpCircle className="w-4 h-4" />
           </button>
-          <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-bold ml-1">
-            S
-          </div>
         </div>
       </div>
     </header>

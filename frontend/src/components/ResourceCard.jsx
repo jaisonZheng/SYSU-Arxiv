@@ -8,9 +8,12 @@ const categoryLabels = {
 }
 
 const subCategoryLabels = {
+  past_exam: '试卷真题',
   lecture: '课件',
   notes: '笔记',
   mock_exam: '模拟题',
+  exam_answer: '试卷答案',
+  textbook_answer: '教材答案',
   summary: '总结',
   other: '其它',
 }
