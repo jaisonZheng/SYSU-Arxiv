@@ -379,7 +379,7 @@ export default function Detail({ isPackage }) {
               {isPackage && m.source_type && (
                 <div className="flex justify-between items-center py-1">
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">来源</span>
-                  <span className="text-sm text-gray-900 font-medium">{m.source_type === 'lanzou' ? '蓝奏云' : m.source_type === 'github' ? 'GitHub' : m.source_type}</span>
+                  <span className="text-sm text-gray-900 font-medium">{m.source_type === 'github' ? 'GitHub' : 'Jaison'}</span>
                 </div>
               )}
             </div>

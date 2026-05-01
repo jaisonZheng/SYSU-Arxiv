@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Bell, HelpCircle, Upload } from 'lucide-react'
+import { Search, Upload } from 'lucide-react'
 import { useState } from 'react'
 
 export default function TopNav() {
@@ -43,12 +43,6 @@ export default function TopNav() {
           >
             <Upload className="w-4 h-4" />
             上传
-          </button>
-          <button className="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-50 transition-colors">
-            <Bell className="w-4 h-4" />
-          </button>
-          <button className="text-gray-400 hover:text-gray-600 p-2 rounded-md hover:bg-gray-50 transition-colors">
-            <HelpCircle className="w-4 h-4" />
           </button>
         </div>
       </div>

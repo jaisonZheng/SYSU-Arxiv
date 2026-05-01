@@ -24,5 +24,9 @@ plan.md
 progress.md
 CLAUDE.md
 
+# Design assets in root
+*.png
+!frontend/public/*.png
+
 # Claude config
 .claude/
