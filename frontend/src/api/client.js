@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8083';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 async function fetchJSON(path, options = {}) {
   const url = `${API_BASE}${path}`;
@@ -26,22 +26,37 @@ export const api = {
 
   getMaterial: (id) => fetchJSON(`/api/materials/${id}`),
 
+  previewMaterial: (id) => `${API_BASE}/api/materials/${id}/preview`,
+
   createMaterial: (formData) => fetchJSON('/api/materials', {
     method: 'POST',
     body: formData,
   }),
 
-  createZipPackage: (formData) => fetchJSON('/api/materials/zip', {
-    method: 'POST',
-    body: formData,
-  }),
-
   downloadMaterial: (id) => `${API_BASE}/api/materials/${id}/download`,
-  downloadPackage: (id) => `${API_BASE}/api/materials/${id}/download-package`,
 
   checkDuplicate: (filename) => fetchJSON(`/api/materials/check-duplicate?filename=${encodeURIComponent(filename)}`),
 
   getDepartments: () => fetchJSON('/api/departments'),
   getCourses: () => fetchJSON('/api/courses'),
   getTags: () => fetchJSON('/api/tags'),
+
+  // Course Packages
+  listPackages: (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') q.set(k, String(v));
+    });
+    return fetchJSON(`/api/packages?${q.toString()}`);
+  },
+
+  getPackage: (id) => fetchJSON(`/api/packages/${id}`),
+
+  getPackageItems: (id) => fetchJSON(`/api/packages/${id}/items`),
+
+  downloadPackage: (id) => `${API_BASE}/api/packages/${id}/download`,
+
+  previewPackageItem: (id, path) => `${API_BASE}/api/packages/${id}/preview/${encodeURIComponent(path)}`,
+
+  getPackageCourses: () => fetchJSON('/api/packages/courses'),
 };

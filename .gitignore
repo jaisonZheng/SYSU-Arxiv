@@ -1,0 +1,28 @@
+# Dependencies
+frontend/node_modules/
+frontend/.playwright-cli/
+
+# Build outputs
+backend/sysu-arxiv-backend
+backend/sysu-arxiv-backend-linux
+
+# Data & uploads
+data/
+
+# Scripts & tools
+scripts/
+
+# Design files
+design/
+
+# Root-level assets & docs
+*.zip
+*.md
+!README.md
+design-reference.txt
+plan.md
+progress.md
+CLAUDE.md
+
+# Claude config
+.claude/

@@ -47,11 +47,38 @@ func (s *LocalStorage) DeleteFile(filePath string) error {
 	return os.Remove(filePath)
 }
 
+func (s *LocalStorage) resolvePath(filePath string) string {
+	// If already absolute, use as-is
+	if filepath.IsAbs(filePath) {
+		return filePath
+	}
+
+	// Try multiple resolution strategies
+	candidates := []string{
+		filePath,                                         // relative to CWD
+		filepath.Join(s.BasePath, filePath),              // relative to BasePath
+		filepath.Join(filepath.Dir(s.BasePath), filePath), // relative to BasePath's parent
+	}
+
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			return p
+		}
+	}
+
+	// Return the most likely candidate (BasePath + filePath)
+	return candidates[1]
+}
+
+func (s *LocalStorage) ResolvePath(filePath string) string {
+	return s.resolvePath(filePath)
+}
+
 func (s *LocalStorage) FileExists(filePath string) bool {
-	_, err := os.Stat(filePath)
+	_, err := os.Stat(s.resolvePath(filePath))
 	return err == nil
 }
 
 func (s *LocalStorage) GetFile(filePath string) (*os.File, error) {
-	return os.Open(filePath)
+	return os.Open(s.resolvePath(filePath))
 }

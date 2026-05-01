@@ -23,7 +23,6 @@ type Material struct {
 	FilePath      string         `json:"file_path"`
 	FileSize      int64          `json:"file_size"`
 	MimeType      sql.NullString `json:"mime_type"`
-	IsZipPackage  bool           `json:"is_zip_package"`
 	DownloadCount int64          `json:"download_count"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
@@ -106,5 +105,63 @@ type CreateMaterialRequest struct {
 	Year         int    `json:"year" form:"year"`
 	FileType     string `json:"file_type" form:"file_type"`
 	UploaderName string `json:"uploader_name" form:"uploader_name"`
-	IsZipPackage bool   `json:"is_zip_package" form:"is_zip_package"`
+}
+
+// CoursePackage represents a zip package for a course
+type CoursePackage struct {
+	ID            int64          `json:"id"`
+	Title         string         `json:"title"`
+	Description   string         `json:"description"`
+	CourseName    string         `json:"course_name"`
+	Department    sql.NullString `json:"department"`
+	SourceType    string         `json:"source_type"`
+	SourceName    sql.NullString `json:"source_name"`
+	FileName      string         `json:"file_name"`
+	FilePath      string         `json:"file_path"`
+	FileSize      int64          `json:"file_size"`
+	TotalFiles    int            `json:"total_files"`
+	DownloadCount int64          `json:"download_count"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+}
+
+func (p CoursePackage) MarshalJSON() ([]byte, error) {
+	type Alias CoursePackage
+	return json.Marshal(&struct {
+		*Alias
+		Department interface{} `json:"department"`
+		SourceName interface{} `json:"source_name"`
+	}{
+		Alias:      (*Alias)(&p),
+		Department: nullString(p.Department),
+		SourceName: nullString(p.SourceName),
+	})
+}
+
+type PackageItem struct {
+	ID       int64  `json:"id"`
+	PackageID int64 `json:"package_id"`
+	Path     string `json:"path"`
+	FileName string `json:"file_name"`
+	FileSize int64  `json:"file_size"`
+	FileType string `json:"file_type"`
+	MimeType string `json:"mime_type"`
+}
+
+type CoursePackageFilter struct {
+	CourseName string `json:"course_name"`
+	SourceType string `json:"source_type"`
+	Search     string `json:"search"`
+	SortBy     string `json:"sort_by"`
+	SortOrder  string `json:"sort_order"`
+	Page       int    `json:"page"`
+	PageSize   int    `json:"page_size"`
+}
+
+type CoursePackageListResponse struct {
+	Items      []CoursePackage `json:"items"`
+	Total      int64           `json:"total"`
+	Page       int             `json:"page"`
+	PageSize   int             `json:"page_size"`
+	TotalPages int             `json:"total_pages"`
 }

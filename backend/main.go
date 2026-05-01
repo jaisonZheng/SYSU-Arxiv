@@ -16,16 +16,20 @@ import (
 
 func main() {
 	var (
-		port     = flag.String("port", "8083", "Server port")
-		dataDir  = flag.String("data", "../data", "Data directory")
+		port    = flag.String("port", "8083", "Server port")
+		dataDir = flag.String("data", "../data", "Data directory")
 	)
 	flag.Parse()
 
-	wd, _ := os.Getwd()
-	dataPath := filepath.Join(wd, *dataDir)
+	dataPath := *dataDir
+	if !filepath.IsAbs(dataPath) {
+		wd, _ := os.Getwd()
+		dataPath = filepath.Join(wd, *dataDir)
+	}
 
-	dbPath := filepath.Join(dataPath, "sysu-arxiv.db")
+	dbPath := filepath.Join(dataPath, "sysu-arxiv-new.db")
 	uploadsPath := filepath.Join(dataPath, "uploads")
+	packagesPath := filepath.Join(dataPath, "packages")
 
 	_, err := db.InitDB(dbPath)
 	if err != nil {
@@ -33,7 +37,10 @@ func main() {
 	}
 
 	store := db.NewMaterialStore()
+	packageStore := db.NewPackageStore()
 	localStorage := storage.NewLocalStorage(uploadsPath)
+	// Package storage uses data dir as base so it can resolve packages/ relative paths
+	packageStorage := storage.NewLocalStorage(dataPath)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -41,11 +48,15 @@ func main() {
 	r.Use(middleware.CORS())
 	r.Use(gin.Logger())
 
-	// Static file serving for uploads
+	// Static file serving for uploads and packages
 	r.Static("/uploads", uploadsPath)
+	r.Static("/packages", packagesPath)
 
 	materialHandler := handlers.NewMaterialHandler(store, localStorage)
 	materialHandler.RegisterRoutes(r)
+
+	packageHandler := handlers.NewPackageHandler(packageStore, packageStorage)
+	packageHandler.RegisterRoutes(r)
 
 	r.GET("/health", materialHandler.Health)
 

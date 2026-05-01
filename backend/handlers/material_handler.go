@@ -16,7 +16,7 @@ import (
 )
 
 type MaterialHandler struct {
-	store  *db.MaterialStore
+	store   *db.MaterialStore
 	storage *storage.LocalStorage
 }
 
@@ -28,11 +28,10 @@ func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	{
 		api.GET("/materials", h.ListMaterials)
+		api.GET("/materials/:id/download", h.DownloadMaterial)
+		api.GET("/materials/:id/preview", h.PreviewMaterial)
 		api.GET("/materials/:id", h.GetMaterial)
 		api.POST("/materials", h.CreateMaterial)
-		api.POST("/materials/zip", h.CreateZipPackage)
-		api.GET("/materials/:id/download", h.DownloadMaterial)
-		api.GET("/materials/:id/download-package", h.DownloadPackage)
 		api.GET("/materials/check-duplicate", h.CheckDuplicate)
 		api.GET("/departments", h.GetDepartments)
 		api.GET("/courses", h.GetCourses)
@@ -156,7 +155,6 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		FilePath:     filePath,
 		FileSize:     fileSize,
 		MimeType:     sql.NullString{String: header.Header.Get("Content-Type"), Valid: header.Header.Get("Content-Type") != ""},
-		IsZipPackage: false,
 	}
 
 	if m.Title == "" {
@@ -187,70 +185,6 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 	})
 }
 
-func (h *MaterialHandler) CreateZipPackage(c *gin.Context) {
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
-		return
-	}
-	defer file.Close()
-
-	fileName := header.Filename
-	fileExt := strings.ToLower(filepath.Ext(fileName))
-
-	if fileExt != ".zip" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "only ZIP files are accepted for package upload"})
-		return
-	}
-
-	filePath, fileSize, err := h.storage.SaveFile(file, header, "packages")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file: " + err.Error()})
-		return
-	}
-
-	m := &models.Material{
-		Title:        c.PostForm("title"),
-		Description:  c.PostForm("description"),
-		Category:     c.PostForm("category"),
-		SubCategory:  sql.NullString{String: c.PostForm("sub_category"), Valid: c.PostForm("sub_category") != ""},
-		Department:   sql.NullString{String: c.PostForm("department"), Valid: c.PostForm("department") != ""},
-		Major:        sql.NullString{String: c.PostForm("major"), Valid: c.PostForm("major") != ""},
-		CourseName:   sql.NullString{String: c.PostForm("course_name"), Valid: c.PostForm("course_name") != ""},
-		Instructor:   sql.NullString{String: c.PostForm("instructor"), Valid: c.PostForm("instructor") != ""},
-		FileType:     sql.NullString{String: "zip", Valid: true},
-		UploaderName: sql.NullString{String: c.PostForm("uploader_name"), Valid: c.PostForm("uploader_name") != ""},
-		FileName:     fileName,
-		FilePath:     filePath,
-		FileSize:     fileSize,
-		MimeType:     sql.NullString{String: "application/zip", Valid: true},
-		IsZipPackage: true,
-	}
-
-	if m.Title == "" {
-		m.Title = strings.TrimSuffix(fileName, fileExt)
-	}
-
-	if yearStr := c.PostForm("year"); yearStr != "" {
-		if year, err := strconv.Atoi(yearStr); err == nil {
-			m.Year.Int64 = int64(year)
-			m.Year.Valid = true
-		}
-	}
-
-	id, err := h.store.Create(m)
-	if err != nil {
-		h.storage.DeleteFile(filePath)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create material: " + err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"id":      id,
-		"message": "zip package uploaded successfully",
-	})
-}
-
 func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -277,10 +211,10 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		c.Header("Content-Type", "application/octet-stream")
 	}
 	c.Header("Content-Length", fmt.Sprintf("%d", m.FileSize))
-	c.File(m.FilePath)
+	c.File(h.storage.ResolvePath(m.FilePath))
 }
 
-func (h *MaterialHandler) DownloadPackage(c *gin.Context) {
+func (h *MaterialHandler) PreviewMaterial(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -293,22 +227,38 @@ func (h *MaterialHandler) DownloadPackage(c *gin.Context) {
 		return
 	}
 
-	if !m.IsZipPackage {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "this material is not a zip package"})
-		return
-	}
-
 	if !h.storage.FileExists(m.FilePath) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "package file not found on disk"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "file not found on disk"})
 		return
 	}
 
-	h.store.IncrementDownloadCount(id)
+	// Determine content type for preview
+	ext := strings.ToLower(filepath.Ext(m.FileName))
+	contentType := m.MimeType.String
+	if contentType == "" {
+		switch ext {
+		case ".pdf":
+			contentType = "application/pdf"
+		case ".jpg", ".jpeg":
+			contentType = "image/jpeg"
+		case ".png":
+			contentType = "image/png"
+		case ".gif":
+			contentType = "image/gif"
+		case ".txt", ".md", ".c", ".cpp", ".h", ".py", ".js":
+			contentType = "text/plain; charset=utf-8"
+		case ".html":
+			contentType = "text/html; charset=utf-8"
+		default:
+			contentType = "application/octet-stream"
+		}
+	}
 
-	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", m.FileName))
-	c.Header("Content-Type", "application/zip")
+	// Inline preview (not download)
+	c.Header("Content-Type", contentType)
 	c.Header("Content-Length", fmt.Sprintf("%d", m.FileSize))
-	c.File(m.FilePath)
+	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", m.FileName))
+	c.File(h.storage.ResolvePath(m.FilePath))
 }
 
 func (h *MaterialHandler) CheckDuplicate(c *gin.Context) {

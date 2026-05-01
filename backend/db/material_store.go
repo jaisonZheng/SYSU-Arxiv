@@ -17,9 +17,9 @@ func NewMaterialStore() *MaterialStore {
 
 func (s *MaterialStore) Create(m *models.Material) (int64, error) {
 	result, err := DB.Exec(`
-		INSERT INTO materials (title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, is_zip_package)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		m.Title, m.Description, m.Category, m.SubCategory, m.Department, m.Major, m.CourseName, m.Instructor, m.Year, m.FileType, m.UploaderName, m.FileName, m.FilePath, m.FileSize, m.MimeType, m.IsZipPackage,
+		INSERT INTO materials (title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		m.Title, m.Description, m.Category, m.SubCategory, m.Department, m.Major, m.CourseName, m.Instructor, m.Year, m.FileType, m.UploaderName, m.FileName, m.FilePath, m.FileSize, m.MimeType,
 	)
 	if err != nil {
 		return 0, err
@@ -30,9 +30,9 @@ func (s *MaterialStore) Create(m *models.Material) (int64, error) {
 func (s *MaterialStore) GetByID(id int64) (*models.Material, error) {
 	m := &models.Material{}
 	err := DB.QueryRow(`
-		SELECT id, title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, is_zip_package, download_count, created_at, updated_at
+		SELECT id, title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, download_count, created_at, updated_at
 		FROM materials WHERE id = ?`, id,
-	).Scan(&m.ID, &m.Title, &m.Description, &m.Category, &m.SubCategory, &m.Department, &m.Major, &m.CourseName, &m.Instructor, &m.Year, &m.FileType, &m.UploaderName, &m.FileName, &m.FilePath, &m.FileSize, &m.MimeType, &m.IsZipPackage, &m.DownloadCount, &m.CreatedAt, &m.UpdatedAt)
+	).Scan(&m.ID, &m.Title, &m.Description, &m.Category, &m.SubCategory, &m.Department, &m.Major, &m.CourseName, &m.Instructor, &m.Year, &m.FileType, &m.UploaderName, &m.FileName, &m.FilePath, &m.FileSize, &m.MimeType, &m.DownloadCount, &m.CreatedAt, &m.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (s *MaterialStore) List(filter *models.MaterialFilter) ([]models.Material, 
 	offset := (page - 1) * pageSize
 
 	query := fmt.Sprintf(`
-		SELECT id, title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, is_zip_package, download_count, created_at, updated_at
+		SELECT id, title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, download_count, created_at, updated_at
 		FROM materials
 		WHERE %s
 		ORDER BY %s %s
@@ -129,7 +129,7 @@ func (s *MaterialStore) List(filter *models.MaterialFilter) ([]models.Material, 
 	items := []models.Material{}
 	for rows.Next() {
 		m := models.Material{}
-		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.Category, &m.SubCategory, &m.Department, &m.Major, &m.CourseName, &m.Instructor, &m.Year, &m.FileType, &m.UploaderName, &m.FileName, &m.FilePath, &m.FileSize, &m.MimeType, &m.IsZipPackage, &m.DownloadCount, &m.CreatedAt, &m.UpdatedAt)
+		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.Category, &m.SubCategory, &m.Department, &m.Major, &m.CourseName, &m.Instructor, &m.Year, &m.FileType, &m.UploaderName, &m.FileName, &m.FilePath, &m.FileSize, &m.MimeType, &m.DownloadCount, &m.CreatedAt, &m.UpdatedAt)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -179,7 +179,7 @@ func (s *MaterialStore) GetDistinctValues(column string) ([]string, error) {
 
 func (s *MaterialStore) GetRelatedMaterials(id int64, courseName string, limit int) ([]models.Material, error) {
 	rows, err := DB.Query(`
-		SELECT id, title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, is_zip_package, download_count, created_at, updated_at
+		SELECT id, title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, download_count, created_at, updated_at
 		FROM materials
 		WHERE id != ? AND course_name = ?
 		ORDER BY download_count DESC
@@ -192,7 +192,7 @@ func (s *MaterialStore) GetRelatedMaterials(id int64, courseName string, limit i
 	items := []models.Material{}
 	for rows.Next() {
 		m := models.Material{}
-		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.Category, &m.SubCategory, &m.Department, &m.Major, &m.CourseName, &m.Instructor, &m.Year, &m.FileType, &m.UploaderName, &m.FileName, &m.FilePath, &m.FileSize, &m.MimeType, &m.IsZipPackage, &m.DownloadCount, &m.CreatedAt, &m.UpdatedAt)
+		err := rows.Scan(&m.ID, &m.Title, &m.Description, &m.Category, &m.SubCategory, &m.Department, &m.Major, &m.CourseName, &m.Instructor, &m.Year, &m.FileType, &m.UploaderName, &m.FileName, &m.FilePath, &m.FileSize, &m.MimeType, &m.DownloadCount, &m.CreatedAt, &m.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -209,8 +209,8 @@ func (s *MaterialStore) Seed(materials []models.Material) error {
 	defer tx.Rollback()
 
 	stmt, err := tx.Prepare(`
-		INSERT INTO materials (title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, is_zip_package, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		INSERT INTO materials (title, description, category, sub_category, department, major, course_name, instructor, year, file_type, uploader_name, file_name, file_path, file_size, mime_type, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func (s *MaterialStore) Seed(materials []models.Material) error {
 		if m.UpdatedAt.IsZero() {
 			m.UpdatedAt = time.Now()
 		}
-		_, err := stmt.Exec(m.Title, m.Description, m.Category, m.SubCategory, m.Department, m.Major, m.CourseName, m.Instructor, m.Year, m.FileType, m.UploaderName, m.FileName, m.FilePath, m.FileSize, m.MimeType, m.IsZipPackage, m.CreatedAt, m.UpdatedAt)
+		_, err := stmt.Exec(m.Title, m.Description, m.Category, m.SubCategory, m.Department, m.Major, m.CourseName, m.Instructor, m.Year, m.FileType, m.UploaderName, m.FileName, m.FilePath, m.FileSize, m.MimeType, m.CreatedAt, m.UpdatedAt)
 		if err != nil {
 			return err
 		}

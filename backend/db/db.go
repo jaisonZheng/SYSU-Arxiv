@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 var DB *sql.DB
@@ -18,7 +18,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to create db directory: %w", err)
 	}
 
-	db, err := sql.Open("sqlite3", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
+	db, err := sql.Open("sqlite", dbPath+"?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
@@ -55,10 +55,35 @@ func runMigrations(db *sql.DB) error {
 			file_path TEXT NOT NULL,
 			file_size INTEGER,
 			mime_type TEXT,
-			is_zip_package INTEGER DEFAULT 0,
 			download_count INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS course_packages (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT NOT NULL,
+			description TEXT,
+			course_name TEXT NOT NULL,
+			department TEXT,
+			source_type TEXT NOT NULL,
+			source_name TEXT,
+			file_name TEXT NOT NULL,
+			file_path TEXT NOT NULL,
+			file_size INTEGER,
+			total_files INTEGER,
+			download_count INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS package_items (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			package_id INTEGER NOT NULL,
+			path TEXT NOT NULL,
+			file_name TEXT NOT NULL,
+			file_size INTEGER,
+			file_type TEXT,
+			mime_type TEXT,
+			FOREIGN KEY (package_id) REFERENCES course_packages(id)
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_materials_category ON materials(category)`,
 		`CREATE INDEX IF NOT EXISTS idx_materials_department ON materials(department)`,
@@ -67,6 +92,9 @@ func runMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_materials_sub_category ON materials(sub_category)`,
 		`CREATE INDEX IF NOT EXISTS idx_materials_created_at ON materials(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_materials_search ON materials(title, description, course_name, instructor)`,
+		`CREATE INDEX IF NOT EXISTS idx_packages_course ON course_packages(course_name)`,
+		`CREATE INDEX IF NOT EXISTS idx_packages_source ON course_packages(source_type)`,
+		`CREATE INDEX IF NOT EXISTS idx_package_items_package ON package_items(package_id)`,
 	}
 
 	for i, m := range migrations {
