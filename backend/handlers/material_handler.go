@@ -16,12 +16,17 @@ import (
 )
 
 type MaterialHandler struct {
-	store   *db.MaterialStore
-	storage *storage.LocalStorage
+	store        *db.MaterialStore
+	packageStore *db.PackageStore
+	storage      *storage.LocalStorage
 }
 
 func NewMaterialHandler(store *db.MaterialStore, storage *storage.LocalStorage) *MaterialHandler {
 	return &MaterialHandler{store: store, storage: storage}
+}
+
+func (h *MaterialHandler) SetPackageStore(ps *db.PackageStore) {
+	h.packageStore = ps
 }
 
 func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
@@ -36,6 +41,8 @@ func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 		api.GET("/departments", h.GetDepartments)
 		api.GET("/courses", h.GetCourses)
 		api.GET("/tags", h.GetTags)
+		api.GET("/stats/downloads", h.GetTotalDownloads)
+		api.GET("/stats/uploads", h.GetTotalUploads)
 	}
 }
 
@@ -307,6 +314,42 @@ func (h *MaterialHandler) GetTags(c *gin.Context) {
 		"categories":     categories,
 		"sub_categories": subCategories,
 		"file_types":     fileTypes,
+	})
+}
+
+func (h *MaterialHandler) GetTotalDownloads(c *gin.Context) {
+	materialDownloads, err := h.store.GetTotalDownloads()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var packageDownloads int64
+	if h.packageStore != nil {
+		packageDownloads, _ = h.packageStore.GetTotalDownloads()
+	}
+
+	total := materialDownloads + packageDownloads
+	c.JSON(http.StatusOK, gin.H{
+		"total_downloads": total,
+	})
+}
+
+func (h *MaterialHandler) GetTotalUploads(c *gin.Context) {
+	materialCount, err := h.store.GetTotalCount()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var packageCount int64
+	if h.packageStore != nil {
+		packageCount, _ = h.packageStore.GetTotalCount()
+	}
+
+	total := materialCount + packageCount
+	c.JSON(http.StatusOK, gin.H{
+		"total_uploads": total,
 	})
 }
 

@@ -133,6 +133,24 @@ func (s *PackageStore) GetItems(packageID int64) ([]models.PackageItem, error) {
 	return items, nil
 }
 
+func (s *PackageStore) GetTotalDownloads() (int64, error) {
+	var total int64
+	err := DB.QueryRow("SELECT COALESCE(SUM(download_count), 0) FROM course_packages").Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func (s *PackageStore) GetTotalCount() (int64, error) {
+	var total int64
+	err := DB.QueryRow("SELECT COUNT(*) FROM course_packages").Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 func (s *PackageStore) IncrementDownloadCount(id int64) error {
 	_, err := DB.Exec("UPDATE course_packages SET download_count = download_count + 1 WHERE id = ?", id)
 	return err

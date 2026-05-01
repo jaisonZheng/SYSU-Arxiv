@@ -139,6 +139,24 @@ func (s *MaterialStore) List(filter *models.MaterialFilter) ([]models.Material, 
 	return items, total, nil
 }
 
+func (s *MaterialStore) GetTotalDownloads() (int64, error) {
+	var total int64
+	err := DB.QueryRow("SELECT COALESCE(SUM(download_count), 0) FROM materials").Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func (s *MaterialStore) GetTotalCount() (int64, error) {
+	var total int64
+	err := DB.QueryRow("SELECT COUNT(*) FROM materials").Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 func (s *MaterialStore) IncrementDownloadCount(id int64) error {
 	_, err := DB.Exec("UPDATE materials SET download_count = download_count + 1 WHERE id = ?", id)
 	return err

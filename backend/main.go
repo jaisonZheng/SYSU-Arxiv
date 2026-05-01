@@ -53,6 +53,7 @@ func main() {
 	r.Static("/packages", packagesPath)
 
 	materialHandler := handlers.NewMaterialHandler(store, localStorage)
+	materialHandler.SetPackageStore(packageStore)
 	materialHandler.RegisterRoutes(r)
 
 	packageHandler := handlers.NewPackageHandler(packageStore, packageStorage)

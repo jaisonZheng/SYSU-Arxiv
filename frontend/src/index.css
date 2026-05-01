@@ -1,113 +1,324 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
+/* ================================================================
+ * 同窗角落 · Design System
+ * ----------------------------------------------------------------
+ * 灵感：中大樟树荫下的午后，温热的奶茶，毕业那年的晚风
+ * 调性：温和、亲切、社区、克制的现代感
+ * ================================================================ */
+
 @theme {
-  --color-primary: #085100;
-  --color-on-primary: #ffffff;
-  --color-primary-container: #1a6b0f;
-  --color-on-primary-container: #fefcff;
-  --color-primary-fixed: #d4edda;
-  --color-primary-fixed-dim: #a8d5a2;
-  --color-on-primary-fixed: #003300;
-  --color-on-primary-fixed-variant: #064000;
-  --color-inverse-primary: #a8d5a2;
+  /* —— 调色板：樟与奶 (Camphor & Cream) —— */
+  --color-cream-50:  #FFFBF5;
+  --color-cream-100: #FAF6EE;
+  --color-cream-200: #F2EADC;
+  --color-cream-300: #E7DAC4;
+  --color-cream-400: #C9B89A;
 
-  --color-secondary: #4648d4;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #6063ee;
-  --color-on-secondary-container: #fffbff;
-  --color-secondary-fixed: #e1e0ff;
-  --color-secondary-fixed-dim: #c0c1ff;
-  --color-on-secondary-fixed: #07006c;
-  --color-on-secondary-fixed-variant: #2f2ebe;
+  --color-ink-900:   #1B1A18;
+  --color-ink-700:   #3F3A33;
+  --color-ink-500:   #6E665B;
+  --color-ink-400:   #908577;
+  --color-ink-300:   #B8AE9F;
+  --color-ink-200:   #D9D1C2;
 
-  --color-tertiary: #924700;
-  --color-on-tertiary: #ffffff;
-  --color-tertiary-container: #b75b00;
-  --color-on-tertiary-container: #fffbff;
-  --color-tertiary-fixed: #ffdcc6;
-  --color-tertiary-fixed-dim: #ffb786;
-  --color-on-tertiary-fixed: #311400;
-  --color-on-tertiary-fixed-variant: #723600;
+  /* 主色 · 樟绿 (Camphor) —— 中大椰林 / 樟树叶背 */
+  --color-camphor-50:  #EEF6F0;
+  --color-camphor-100: #D6E9DA;
+  --color-camphor-200: #A8D0B0;
+  --color-camphor-300: #6FB081;
+  --color-camphor-400: #3F8E5C;
+  --color-camphor-500: #2D6A4F;
+  --color-camphor-600: #235740;
+  --color-camphor-700: #1B4533;
+  --color-camphor-800: #143424;
+  --color-camphor-900: #0D2418;
 
-  --color-error: #ba1a1a;
-  --color-on-error: #ffffff;
-  --color-error-container: #ffdad6;
-  --color-on-error-container: #93000a;
+  /* 强调色 · 蜜橘 (Honey) —— 温暖 / 友好 / 鼓励 */
+  --color-honey-50:  #FFF6EC;
+  --color-honey-100: #FFE6CB;
+  --color-honey-200: #FFD09C;
+  --color-honey-300: #FFB66E;
+  --color-honey-400: #FF9A48;
+  --color-honey-500: #F47D2C;
+  --color-honey-600: #D86519;
+  --color-honey-700: #A94C0F;
 
-  --color-background: #f8f9fa;
-  --color-on-background: #191c1d;
-  --color-surface: #f8f9fa;
-  --color-on-surface: #191c1d;
-  --color-surface-variant: #e1e3e4;
-  --color-on-surface-variant: #424754;
-  --color-inverse-surface: #2e3132;
-  --color-inverse-on-surface: #f0f1f2;
-  --color-surface-tint: #085100;
-  --color-surface-bright: #f8f9fa;
-  --color-surface-dim: #d9dadb;
-  --color-surface-container: #edeeef;
-  --color-surface-container-low: #f3f4f5;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-high: #e7e8e9;
-  --color-surface-container-highest: #e1e3e4;
+  /* 高光色 · 木棉 (Kapok) —— 用于贡献按钮与勋章 */
+  --color-kapok-50:  #FFEFE9;
+  --color-kapok-100: #FFD5C7;
+  --color-kapok-200: #FFA88C;
+  --color-kapok-300: #FF7A5A;
+  --color-kapok-400: #EE5A3E;
+  --color-kapok-500: #C8412B;
 
-  --color-outline: #727785;
-  --color-outline-variant: #c2c6d6;
+  /* 静默色 · 雾蓝 (Mist) —— 信息 / 标签 */
+  --color-mist-50:  #EEF3F8;
+  --color-mist-100: #D4E0EC;
+  --color-mist-200: #A4BCD3;
+  --color-mist-300: #6E92B5;
+  --color-mist-500: #3D6890;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  /* 莓 (Berry) —— 错误 / 删除 */
+  --color-berry-50:  #FEEDED;
+  --color-berry-100: #FAC8C9;
+  --color-berry-500: #C8364E;
+  --color-berry-600: #A82640;
 
-  --text-body-sm: 14px;
-  --text-body-sm--line-height: 20px;
-  --text-body-sm--font-weight: 400;
+  /* 语义别名 */
+  --color-bg:           var(--color-cream-50);
+  --color-bg-soft:      var(--color-cream-100);
+  --color-bg-warm:      var(--color-cream-200);
+  --color-surface:      #FFFFFF;
+  --color-surface-soft: var(--color-cream-100);
+  --color-line:         #ECE3D2;
+  --color-line-soft:    #F4ECDC;
 
-  --text-label-md: 14px;
-  --text-label-md--line-height: 20px;
-  --text-label-md--font-weight: 500;
+  --color-primary:        var(--color-camphor-500);
+  --color-primary-soft:   var(--color-camphor-100);
+  --color-primary-strong: var(--color-camphor-700);
+  --color-on-primary:     #FFFFFF;
 
-  --text-label-caps: 12px;
-  --text-label-caps--line-height: 16px;
-  --text-label-caps--letter-spacing: 0.05em;
-  --text-label-caps--font-weight: 600;
+  --color-accent:        var(--color-honey-400);
+  --color-accent-soft:   var(--color-honey-100);
+  --color-accent-strong: var(--color-honey-600);
+  --color-on-accent:     #2A1A0A;
 
-  --text-h1: 30px;
-  --text-h1--line-height: 38px;
-  --text-h1--letter-spacing: -0.02em;
-  --text-h1--font-weight: 600;
+  --color-flame:         var(--color-kapok-400);
+  --color-flame-soft:    var(--color-kapok-100);
 
-  --text-h2: 24px;
-  --text-h2--line-height: 32px;
-  --text-h2--letter-spacing: -0.01em;
-  --text-h2--font-weight: 600;
+  --color-success: #4FA672;
+  --color-warning: var(--color-honey-500);
+  --color-danger:  var(--color-berry-500);
+  --color-info:    var(--color-mist-500);
 
-  --text-h3: 20px;
-  --text-h3--line-height: 28px;
-  --text-h3--font-weight: 600;
+  /* —— 字体 —— */
+  --font-sans:    'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+  --font-serif:   'Noto Serif SC', 'Source Han Serif', serif;
+  --font-hand:    'Caveat', 'Noto Sans SC', cursive;
 
-  --radius: 0.125rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
-  --radius-full: 0.75rem;
+  /* —— 字阶 —— */
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13.5px;
+  --text-sm--line-height: 20px;
+  --text-base: 15px;
+  --text-base--line-height: 24px;
+  --text-lg: 17px;
+  --text-lg--line-height: 26px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 26px;
+  --text-2xl--line-height: 34px;
+  --text-3xl: 34px;
+  --text-3xl--line-height: 42px;
+  --text-4xl: 44px;
+  --text-4xl--line-height: 52px;
+  --text-5xl: 56px;
+  --text-5xl--line-height: 62px;
+
+  /* —— 圆角 —— */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius:    14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
+
+  /* —— 阴影 —— */
+  --shadow-xs:  0 1px 1px rgba(34, 26, 12, 0.04);
+  --shadow-sm:  0 2px 4px -2px rgba(34, 26, 12, 0.06), 0 4px 12px -6px rgba(34, 26, 12, 0.05);
+  --shadow:     0 4px 12px -4px rgba(34, 26, 12, 0.08), 0 8px 28px -10px rgba(34, 26, 12, 0.08);
+  --shadow-lg:  0 12px 32px -10px rgba(34, 26, 12, 0.16), 0 20px 56px -20px rgba(34, 26, 12, 0.14);
+  --shadow-glow:0 0 0 4px rgba(45, 106, 79, 0.18);
+  --shadow-warm:0 12px 36px -16px rgba(244, 125, 44, 0.40);
 }
 
+/* ----------------------------------------------------------------
+ * 全局基础样式
+ * ---------------------------------------------------------------- */
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 body {
-  font-family: 'Inter', system-ui, sans-serif;
-  background: #f8f9fa;
-  color: #191c1d;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-ink-900);
   margin: 0;
   min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
 }
+*, *::before, *::after { box-sizing: border-box; }
 
+/* 美化滚动条 */
+* { scrollbar-width: thin; scrollbar-color: var(--color-cream-300) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--color-cream-300); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--color-cream-400); }
+
+/* 选区 */
+::selection { background: var(--color-honey-200); color: var(--color-ink-900); }
+
+/* 内置原生表单视觉一致 */
+button, input, select, textarea {
+  font-family: inherit;
+  color: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; }
+
+/* ----------------------------------------------------------------
+ * 自定义工具类
+ * ---------------------------------------------------------------- */
 @utility line-clamp-1 {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
 }
-
 @utility line-clamp-2 {
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+@utility line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* 暖色玻璃感卡 */
+@utility card-warm {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  transition: transform .35s cubic-bezier(.22,1,.36,1),
+              box-shadow .35s cubic-bezier(.22,1,.36,1),
+              border-color .25s ease;
+}
+@utility card-warm-hover {
+  border-color: var(--color-camphor-200);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+/* 暖色徽章 */
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+/* 主按钮（樟） */
+@utility btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 18px; height: 40px; border-radius: 999px;
+  background: var(--color-camphor-500);
+  color: white; font-weight: 600; font-size: 14px;
+  box-shadow: 0 8px 20px -10px rgba(45,106,79,0.5);
+  transition: transform .2s ease, box-shadow .25s ease, background .2s ease;
+}
+@utility btn-primary-hover {
+  background: var(--color-camphor-600);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -10px rgba(45,106,79,0.55);
+}
+
+/* 高亮按钮（木棉） */
+@utility btn-flame {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 18px; height: 40px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-honey-400), var(--color-kapok-400));
+  color: white; font-weight: 700; font-size: 14px;
+  box-shadow: var(--shadow-warm);
+  transition: transform .2s ease, box-shadow .25s ease;
+}
+@utility btn-flame-hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 16px 40px -16px rgba(244,125,44,0.55);
+}
+
+/* 次按钮 */
+@utility btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 14px; height: 38px; border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink-700);
+  border: 1px solid var(--color-line);
+  font-weight: 500; font-size: 14px;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+@utility btn-ghost-hover {
+  background: var(--color-cream-100);
+  border-color: var(--color-camphor-200);
+  color: var(--color-ink-900);
+}
+
+/* 噪点纹理（细微让背景不平） */
+@utility texture-paper {
+  background-image:
+    radial-gradient(rgba(110,90,60,0.05) 1px, transparent 1px),
+    radial-gradient(rgba(110,90,60,0.04) 1px, transparent 1px);
+  background-size: 24px 24px, 36px 36px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* 暖色径向光斑（用于 hero） */
+@utility glow-warm {
+  background:
+    radial-gradient(60% 70% at 15% 25%, rgba(255, 200, 140, 0.45) 0%, rgba(255,200,140,0) 60%),
+    radial-gradient(50% 60% at 85% 30%, rgba(168, 208, 176, 0.42) 0%, rgba(168,208,176,0) 60%),
+    radial-gradient(70% 80% at 50% 90%, rgba(255, 178, 130, 0.30) 0%, rgba(255,178,130,0) 60%);
+}
+
+/* —— 动画 —— */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-6px) rotate(2deg); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position: 300px 0; }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+@utility animate-float {
+  animation: float-soft 4.5s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+@utility animate-fade-up {
+  animation: fade-up .55s cubic-bezier(.22,1,.36,1) both;
+  will-change: transform, opacity;
+}
+@utility animate-pulse-soft {
+  animation: pulse-soft 1.6s ease-in-out infinite;
+  will-change: opacity;
+}
+@utility shimmer-bar {
+  background: linear-gradient(90deg, var(--color-cream-200) 0%, var(--color-cream-100) 50%, var(--color-cream-200) 100%);
+  background-size: 600px 100%;
+  animation: shimmer 1.6s linear infinite;
+  will-change: background-position;
+}
+
+/* 焦点态 (键盘) */
+:focus-visible {
+  outline: 3px solid rgba(45,106,79,0.35);
+  outline-offset: 2px;
+  border-radius: 8px;
 }

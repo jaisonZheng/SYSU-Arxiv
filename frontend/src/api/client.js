@@ -71,4 +71,8 @@ export const api = {
     method: 'POST',
     body: formData,
   }),
+
+  // Stats
+  getTotalDownloads: () => fetchJSON('/api/stats/downloads'),
+  getTotalUploads: () => fetchJSON('/api/stats/uploads'),
 };
