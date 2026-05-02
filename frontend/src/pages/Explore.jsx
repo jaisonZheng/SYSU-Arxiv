@@ -69,6 +69,7 @@ export default function Explore({ category, title }) {
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [departments, setDepartments] = useState([])
   const [courses, setCourses] = useState([])
@@ -94,8 +95,10 @@ export default function Explore({ category, title }) {
   const tone = toneStyles[hero.tone]
 
   const loadData = useCallback(async () => {
+    const isFirst = materials.length === 0
     try {
-      setLoading(true)
+      if (isFirst) setLoading(true)
+      else setRefreshing(true)
       const [sortBy, sortOrder] = filters.sort.split(':')
       const params = { ...filters, sort_by: sortBy, sort_order: sortOrder }
       const res = await api.listMaterials(params)
@@ -106,8 +109,9 @@ export default function Explore({ category, title }) {
       console.error(e)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
-  }, [filters])
+  }, [filters, materials.length])
 
   const loadFilters = useCallback(async () => {
     try {
@@ -332,10 +336,24 @@ export default function Explore({ category, title }) {
       <section>
         <div className="flex items-center justify-between mb-4">
           <p className="text-[13.5px] text-[--color-ink-500]">
-            {loading ? '正在翻找…' : <>找到 <span className="text-[--color-ink-900] font-semibold">{total}</span> 份资料</>}
+            {loading || refreshing ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="inline-block w-3.5 h-3.5 border-2 border-[--color-camphor-400] border-t-transparent rounded-full animate-spin" />
+                正在翻找…
+              </span>
+            ) : (
+              <>找到 <span className="text-[--color-ink-900] font-semibold">{total}</span> 份资料</>
+            )}
           </p>
           <SortSegment value={filters.sort} onChange={(v) => updateFilter('sort', v)} />
         </div>
+
+        {/* 顶部微弱进度条，刷新时不闪烁 */}
+        {refreshing && (
+          <div className="h-0.5 w-full bg-[--color-cream-200] rounded-full mb-4 overflow-hidden">
+            <div className="h-full w-1/3 bg-[--color-camphor-400] rounded-full animate-[shimmer_1s_linear_infinite]" />
+          </div>
+        )}
 
         {loading ? (
           <LoadingShimmer rows={5} />
@@ -354,7 +372,7 @@ export default function Explore({ category, title }) {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 ${refreshing ? 'opacity-60 pointer-events-none' : ''} transition-opacity duration-300`}>
             {materials.map((m) => <ResourceCard key={m.id} material={m} />)}
           </div>
         )}

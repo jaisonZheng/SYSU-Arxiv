@@ -8,6 +8,7 @@ import {
 import { api } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
 import SectionHeading from '../components/SectionHeading'
+import ThankButton from '../components/ThankButton'
 import {
   timeAgo, formatDate, formatSize, avatarLetter, avatarColor,
   categoryMeta, subCategoryMeta,
@@ -205,6 +206,8 @@ export default function Detail({ isPackage }) {
     window.open(url, '_blank')
   }
 
+  const isExternalPackage = isPackage && data?.source_type && data.source_type !== 'user_upload'
+
   if (loading) {
     return (
       <div className="flex flex-col gap-6 animate-fade-up">
@@ -368,21 +371,32 @@ export default function Detail({ isPackage }) {
         <aside className="lg:col-span-4 flex flex-col gap-4">
           {/* 下载卡 */}
           <div className="bg-white border border-[--color-line] rounded-3xl p-5 shadow-[var(--shadow-xs)] sticky top-[80px]">
-            <button
-              onClick={handleDownload}
-              className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
-            >
-              <Download className="w-4 h-4" />
-              收下{isPackage ? '整个资源包' : '这份资料'}
-            </button>
-            <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
-              {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
-            </p>
-            {isPackage && (
-              <p className="text-center text-[11.5px] text-[--color-ink-400] mt-1">
-                打包后的 ZIP，里面有 {m.total_files || packageItems.length} 个文件
-              </p>
-            )}
+            <>
+              <button
+                onClick={handleDownload}
+                className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+              >
+                  <Download className="w-4 h-4" />
+                  收下{isPackage ? '整个资源包' : '这份资料'}
+                </button>
+                <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
+                  {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
+                </p>
+                {isPackage && (
+                  <p className="text-center text-[11.5px] text-[--color-ink-400] mt-1">
+                    打包后的 ZIP，里面有 {m.total_files || packageItems.length} 个文件
+                  </p>
+                )}
+              </>
+
+            <div className="mt-4 pt-4 border-t border-dashed border-[--color-line] flex justify-center">
+              <ThankButton
+                id={m.id}
+                initialCount={m.thanks_count || 0}
+                isPackage={isPackage}
+                size="lg"
+              />
+            </div>
 
             <div className="mt-4 pt-4 border-t border-dashed border-[--color-line] text-center">
               <p className="text-[11.5px] text-[--color-ink-500] mb-2">收下了别忘记 ——</p>
@@ -390,7 +404,7 @@ export default function Detail({ isPackage }) {
                 onClick={() => navigate('/upload')}
                 className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[--color-camphor-700] hover:text-[--color-camphor-900]"
               >
-                <Sparkles className="w-3.5 h-3.5" /> 自己也回传一份
+                <Sparkles className="w-3.5 h-3.5" /> 自己也上传一份
               </button>
             </div>
           </div>

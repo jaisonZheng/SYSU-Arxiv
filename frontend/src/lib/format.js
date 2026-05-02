@@ -28,13 +28,13 @@ export const tone = (key) => toneClass[key] || toneClass.mist
 // —— 一天里的不同问候语 —— //
 export function greet() {
   const h = new Date().getHours()
-  if (h < 5)  return { hi: '夜深了',     emoji: '🌙', sub: '复习累了就先睡，明早再来吧' }
-  if (h < 9)  return { hi: '早上好',     emoji: '☀️', sub: '一杯咖啡，从一份资料开始今天' }
-  if (h < 12) return { hi: '上午好',     emoji: '🍃', sub: '校园里的樟树正绿，趁状态收一份笔记吧' }
-  if (h < 14) return { hi: '中午好',     emoji: '🥢', sub: '吃饱了再看，专注力会好得多' }
-  if (h < 18) return { hi: '下午好',     emoji: '🌻', sub: '阳光正暖，来逛一圈最近的资料' }
-  if (h < 22) return { hi: '晚上好',     emoji: '🌆', sub: '一起把信息差抹平，让明天更轻松' }
-  return        { hi: '夜里好',     emoji: '🌌', sub: '夜里专属的安静时段，最适合收下一份好资料' }
+  if (h < 5)  return { hi: '夜深了',     emoji: '🌙', sub: '复习累了就先睡，明早再来吧', mascot: 'sleeping', mascotLabel: '枕着书睡着了' }
+  if (h < 9)  return { hi: '早上好',     emoji: '☀️', sub: '一杯咖啡，从一份资料开始今天', mascot: 'reading', mascotLabel: '刚醒来在翻书' }
+  if (h < 12) return { hi: '上午好',     emoji: '🍃', sub: '校园里的樟树正绿，趁状态收一份笔记吧', mascot: 'reading', mascotLabel: '认真在看书' }
+  if (h < 14) return { hi: '中午好',     emoji: '🥢', sub: '吃饱了再看，专注力会好得多', mascot: 'sunshield', mascotLabel: '用书挡着太阳' }
+  if (h < 18) return { hi: '下午好',     emoji: '🌻', sub: '阳光正暖，来逛一圈最近的资料', mascot: 'reading', mascotLabel: '懒洋洋地翻页' }
+  if (h < 22) return { hi: '晚上好',     emoji: '🌆', sub: '一起把信息差抹平，让明天更轻松', mascot: 'reading', mascotLabel: '挑灯夜读中' }
+  return        { hi: '夜里好',     emoji: '🌌', sub: '夜里专属的安静时段，最适合收下一份好资料', mascot: 'sleeping', mascotLabel: '蜷成一团睡了' }
 }
 
 // —— 相对时间 —— //

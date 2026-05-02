@@ -56,6 +56,7 @@ func runMigrations(db *sql.DB) error {
 			file_size INTEGER,
 			mime_type TEXT,
 			download_count INTEGER DEFAULT 0,
+			thanks_count INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
@@ -72,6 +73,7 @@ func runMigrations(db *sql.DB) error {
 			file_size INTEGER,
 			total_files INTEGER,
 			download_count INTEGER DEFAULT 0,
+			thanks_count INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
@@ -100,6 +102,33 @@ func runMigrations(db *sql.DB) error {
 	for i, m := range migrations {
 		if _, err := db.Exec(m); err != nil {
 			return fmt.Errorf("migration %d failed: %w", i, err)
+		}
+	}
+
+	// Add thanks_count columns safely (SQLite older than 3.35 doesn't support IF NOT EXISTS in ALTER TABLE)
+	if err := addColumnIfNotExists(db, "materials", "thanks_count", "INTEGER DEFAULT 0"); err != nil {
+		return fmt.Errorf("failed to add thanks_count to materials: %w", err)
+	}
+	if err := addColumnIfNotExists(db, "course_packages", "thanks_count", "INTEGER DEFAULT 0"); err != nil {
+		return fmt.Errorf("failed to add thanks_count to course_packages: %w", err)
+	}
+
+	return nil
+}
+
+func addColumnIfNotExists(db *sql.DB, table, column, def string) error {
+	var count int
+	err := db.QueryRow(
+		"SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?",
+		table, column,
+	).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		_, err = db.Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", table, column, def))
+		if err != nil {
+			return err
 		}
 	}
 	return nil

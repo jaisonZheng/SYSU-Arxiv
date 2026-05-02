@@ -28,9 +28,9 @@ func (s *PackageStore) Create(p *models.CoursePackage) (int64, error) {
 func (s *PackageStore) GetByID(id int64) (*models.CoursePackage, error) {
 	p := &models.CoursePackage{}
 	err := DB.QueryRow(`
-		SELECT id, title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files, download_count, created_at, updated_at
+		SELECT id, title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files, download_count, thanks_count, created_at, updated_at
 		FROM course_packages WHERE id = ?`, id,
-	).Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.ThanksCount, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *PackageStore) List(filter *models.CoursePackageFilter) ([]models.Course
 	offset := (page - 1) * pageSize
 
 	query := fmt.Sprintf(`
-		SELECT id, title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files, download_count, created_at, updated_at
+		SELECT id, title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files, download_count, thanks_count, created_at, updated_at
 		FROM course_packages
 		WHERE %s
 		ORDER BY %s %s
@@ -102,7 +102,7 @@ func (s *PackageStore) List(filter *models.CoursePackageFilter) ([]models.Course
 	items := []models.CoursePackage{}
 	for rows.Next() {
 		p := models.CoursePackage{}
-		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.CreatedAt, &p.UpdatedAt)
+		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.ThanksCount, &p.CreatedAt, &p.UpdatedAt)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -181,4 +181,18 @@ func (s *PackageStore) GetDistinctCourses() ([]string, error) {
 		values = append(values, v)
 	}
 	return values, nil
+}
+
+func (s *PackageStore) IncrementThanksCount(id int64) error {
+	_, err := DB.Exec("UPDATE course_packages SET thanks_count = thanks_count + 1 WHERE id = ?", id)
+	return err
+}
+
+func (s *PackageStore) GetTotalThanks() (int64, error) {
+	var total int64
+	err := DB.QueryRow("SELECT COALESCE(SUM(thanks_count), 0) FROM course_packages").Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
 }

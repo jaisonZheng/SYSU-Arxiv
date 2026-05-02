@@ -54,9 +54,13 @@ export default function UploadPage() {
   }, [])
 
   const addFiles = (newFiles) => {
+    const isPackage = form.category === 'package'
     const valid = newFiles.filter((f) => {
       const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase()
-      return allowedExt.includes(ext)
+      if (!allowedExt.includes(ext)) return false
+      if (isPackage && ext !== '.zip') return false
+      if (!isPackage && ext === '.zip') return false
+      return true
     })
     setFiles((prev) => [...prev, ...valid])
     if (valid.length > 0 && !form.title) {
@@ -96,8 +100,14 @@ export default function UploadPage() {
     if (files.length === 0) errors.push('先选个文件吧')
     if (!form.title.trim()) errors.push('给资料起个名字吧')
     if (!form.category) errors.push('选一下分类哦')
-    if (form.category === 'package' && files.length > 0 && !files.some(f => f.name.toLowerCase().endsWith('.zip'))) {
-      errors.push('「课程资源包」需要上传 ZIP 格式的压缩包')
+    if (form.category === 'package') {
+      if (files.length > 0 && !files.every(f => f.name.toLowerCase().endsWith('.zip'))) {
+        errors.push('「课程资源包」仅支持 ZIP 格式')
+      }
+    } else {
+      if (files.some(f => f.name.toLowerCase().endsWith('.zip'))) {
+        errors.push('普通资料不能上传 ZIP，如需上传课程包请选择「课程资源包」分类')
+      }
     }
     return errors
   }
@@ -118,6 +128,7 @@ export default function UploadPage() {
     setUploadResult(null)
     try {
       const results = []
+      const isPackage = form.category === 'package'
       for (const file of files) {
         const formData = new FormData()
         formData.append('file', file)
@@ -133,8 +144,7 @@ export default function UploadPage() {
         if (form.file_type)     formData.append('file_type', form.file_type)
         if (form.uploader_name) formData.append('uploader_name', form.uploader_name)
 
-        const isZip = file.name.toLowerCase().endsWith('.zip')
-        const endpoint = isZip ? api.createZipPackage : api.createMaterial
+        const endpoint = isPackage ? api.createZipPackage : api.createMaterial
         const res = await endpoint(formData)
         results.push({ filename: file.name, success: true, id: res.id })
       }
@@ -203,7 +213,7 @@ export default function UploadPage() {
             支持 PDF / DOC / PPT / XLS / TXT / MD / 图片 / ZIP，最大 100MB
           </p>
           <p className="text-[11.5px] text-[--color-ink-400] mt-2">
-            ZIP 上传会被自动识别为「课程资源包」 🎁
+            先选分类再传文件 —— 课程资源包仅支持 ZIP 格式 🎁
           </p>
           <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
         </div>
@@ -235,7 +245,7 @@ export default function UploadPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13.5px] text-[--color-ink-900] truncate font-medium">{file.name}</p>
-                      <p className="text-[11.5px] text-[--color-ink-500]">{formatSize(file.size)}{isZip ? ' · 会被打包成课程包 🎁' : ''}</p>
+                      <p className="text-[11.5px] text-[--color-ink-500]">{formatSize(file.size)}{isZip ? ' · 课程资源包' : ''}</p>
                     </div>
                   </div>
                   <button

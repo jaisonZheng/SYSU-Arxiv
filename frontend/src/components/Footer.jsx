@@ -24,7 +24,7 @@ export default function Footer() {
           <ul className="space-y-1.5 text-[13.5px] text-[--color-ink-700]">
             <li className="flex items-center gap-2"><Sparkles className="w-3.5 h-3.5 text-[--color-honey-500]" /> 资料免费 · 严禁倒卖</li>
             <li className="flex items-center gap-2"><Heart className="w-3.5 h-3.5 text-[--color-kapok-400]" /> 上传请勿带个人隐私 / 违规内容</li>
-            <li className="flex items-center gap-2"><span className="w-3.5 h-3.5 grid place-items-center text-[--color-camphor-500]">✦</span> 收下了别忘记，自己也回传一份</li>
+            <li className="flex items-center gap-2"><span className="w-3.5 h-3.5 grid place-items-center text-[--color-camphor-500]">✦</span> 收下了别忘记，自己也上传一份</li>
           </ul>
         </div>
 

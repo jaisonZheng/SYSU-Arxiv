@@ -90,7 +90,7 @@ export default function TopNav() {
           />
         </form>
 
-        <div className="flex-1 lg:hidden" />
+        <div className="flex-1" />
 
         {/* Right actions */}
         <div className="flex items-center gap-2">

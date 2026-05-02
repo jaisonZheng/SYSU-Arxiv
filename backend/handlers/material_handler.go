@@ -43,6 +43,9 @@ func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 		api.GET("/tags", h.GetTags)
 		api.GET("/stats/downloads", h.GetTotalDownloads)
 		api.GET("/stats/uploads", h.GetTotalUploads)
+		api.GET("/stats/thanks", h.GetTotalThanks)
+		api.POST("/materials/:id/thank", h.ThankMaterial)
+		api.POST("/packages/:id/thank", h.ThankPackage)
 	}
 }
 
@@ -133,7 +136,12 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 	allowedExts := map[string]bool{
 		".pdf": true, ".doc": true, ".docx": true, ".ppt": true, ".pptx": true,
 		".xls": true, ".xlsx": true, ".txt": true, ".md": true, ".jpg": true,
-		".jpeg": true, ".png": true, ".zip": true, ".rar": true, ".7z": true,
+		".jpeg": true, ".png": true, ".rar": true, ".7z": true,
+	}
+
+	if fileExt == ".zip" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ZIP 文件请通过「课程资源包」分类上传"})
+		return
 	}
 
 	if !allowedExts[fileExt] {
@@ -350,6 +358,52 @@ func (h *MaterialHandler) GetTotalUploads(c *gin.Context) {
 	total := materialCount + packageCount
 	c.JSON(http.StatusOK, gin.H{
 		"total_uploads": total,
+	})
+}
+
+func (h *MaterialHandler) ThankMaterial(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if err := h.store.IncrementThanksCount(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"thanked": true})
+}
+
+func (h *MaterialHandler) ThankPackage(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	if h.packageStore == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "package store not available"})
+		return
+	}
+	if err := h.packageStore.IncrementThanksCount(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"thanked": true})
+}
+
+func (h *MaterialHandler) GetTotalThanks(c *gin.Context) {
+	materialThanks, err := h.store.GetTotalThanks()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	var packageThanks int64
+	if h.packageStore != nil {
+		packageThanks, _ = h.packageStore.GetTotalThanks()
+	}
+	total := materialThanks + packageThanks
+	c.JSON(http.StatusOK, gin.H{
+		"total_thanks": total,
 	})
 }
 

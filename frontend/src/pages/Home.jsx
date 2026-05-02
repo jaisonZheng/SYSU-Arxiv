@@ -8,6 +8,7 @@ import { api } from '../api/client'
 import AnimatedCounter from '../components/AnimatedCounter'
 import ResourceCard from '../components/ResourceCard'
 import SectionHeading, { ViewAllLink } from '../components/SectionHeading'
+import Mascot from '../components/Mascot'
 import { EmptyState, LoadingBubble, LoadingShimmer } from '../components/States'
 import {
   greet, timeAgo, formatSize, avatarLetter, avatarColor, categoryMeta,
@@ -28,6 +29,7 @@ export default function Home() {
   const [stats, setStats] = useState({ exams: 0, materials: 0, packages: 0 })
   const [totalDownloads, setTotalDownloads] = useState(0)
   const [totalUploads, setTotalUploads] = useState(0)
+  const [totalThanks, setTotalThanks] = useState(0)
   const [contributors, setContributors] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -38,13 +40,14 @@ export default function Home() {
     const loadData = async () => {
       setLoading(true)
       const safe = (p) => p.catch(() => null)
-      const [pkgs, recent, exams, mats, dls, ups] = await Promise.all([
+      const [pkgs, recent, exams, mats, dls, ups, thx] = await Promise.all([
         safe(api.listPackages({ page_size: 8, sort_by: 'download_count' })),
         safe(api.listMaterials({ page_size: 6, sort_by: 'created_at' })),
         safe(api.listMaterials({ category: 'past_exam', page_size: 1 })),
         safe(api.listMaterials({ category: 'study_material', page_size: 1 })),
         safe(api.getTotalDownloads()),
         safe(api.getTotalUploads()),
+        safe(api.getTotalThanks()),
       ])
       if (cancelled) return
       setPackages(pkgs?.items || [])
@@ -56,6 +59,7 @@ export default function Home() {
       })
       setTotalDownloads(dls?.total_downloads ?? 0)
       setTotalUploads(ups?.total_uploads ?? 0)
+      setTotalThanks(thx?.total_thanks ?? 0)
 
       // 从最近上传里提取贡献者
       const seen = new Map()
@@ -166,7 +170,7 @@ export default function Home() {
         <SectionHeading
           kicker="想找什么"
           title="今天来角落里看看？"
-          hint="按分类挑一个开始 ——  挑到了好的，记得也回传一份。"
+          hint="按分类挑一个开始 ——  挑到了好的，记得也上传一份。"
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
           <CategoryCard
@@ -217,18 +221,18 @@ export default function Home() {
             pad={6}
           />
           <AnimatedCounter
-            value={totalUploads}
-            label="累计被分享"
+            value={stats.packages + stats.exams + stats.materials}
+            label="角落里现在有"
             hint="背后是无数次「我也传一份」"
-            suffix="次"
+            suffix="份"
             tone="camphor"
             pad={5}
           />
           <AnimatedCounter
-            value={stats.packages + stats.exams + stats.materials}
-            label="角落里现在有"
-            hint="实时更新 · 你也来添一份"
-            suffix="份"
+            value={totalThanks}
+            label="累计被感谢"
+            hint="每一次「少熬一夜」都是真心的"
+            suffix="次"
             tone="kapok"
             pad={5}
           />
@@ -343,19 +347,15 @@ function HeroVisual({ hello, packages, contributors }) {
   const c1 = contributors[0]
   const c2 = contributors[1]
   return (
-    <div className="relative h-[340px] md:h-[420px]">
-      {/* 大背景圆 */}
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="w-[260px] md:w-[340px] h-[260px] md:h-[340px] rounded-full bg-gradient-to-br from-[--color-cream-200] to-[--color-honey-100] grow-0 shrink-0 relative overflow-hidden">
-          <div className="absolute inset-0 grid place-items-center">
-            <div className="text-[180px] md:text-[220px] select-none animate-float" style={{ filter: 'drop-shadow(0 18px 30px rgba(120,60,20,0.18))' }}>
-              {hello.emoji}
-            </div>
-          </div>
-          {/* 装饰点 */}
-          <div className="absolute top-8 right-10 w-3 h-3 rounded-full bg-[--color-camphor-400] opacity-70" />
-          <div className="absolute bottom-12 left-8 w-2 h-2 rounded-full bg-[--color-kapok-400] opacity-70" />
-        </div>
+    <div className="relative h-[340px] md:h-[420px] flex items-center justify-center">
+      {/* 橘猫主体 - 占据右侧整块 */}
+      <div className="relative animate-float" style={{ filter: 'drop-shadow(0 18px 30px rgba(120,60,20,0.18))' }}>
+        <Mascot size={280} variant={hello.mascot} />
+        {hello.mascotLabel && (
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white/90 backdrop-blur-sm border border-[--color-line] rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-[--color-ink-700] shadow-[var(--shadow-xs)]">
+            {hello.mascotLabel}
+          </span>
+        )}
       </div>
 
       {/* 浮卡 1：今日推荐 */}
@@ -392,10 +392,10 @@ function HeroVisual({ hello, packages, contributors }) {
         </div>
       )}
 
-      {/* 浮卡 3：椰风 */}
+      {/* 浮卡 3：榕风 */}
       <div className="absolute top-[44%] right-[-6px] md:right-2 bg-[--color-camphor-700] text-white rounded-2xl shadow-[var(--shadow)] px-3 py-2 animate-float" style={{ animationDelay: '0.8s' }}>
         <div className="flex items-center gap-2 text-[12px] font-semibold tracking-wide">
-          <GraduationCap className="w-3.5 h-3.5" /> 中大椰林角落
+          <GraduationCap className="w-3.5 h-3.5" /> 中大榕树角落
         </div>
       </div>
     </div>

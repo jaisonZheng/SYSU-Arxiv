@@ -130,6 +130,10 @@ func (h *PackageHandler) DownloadPackage(c *gin.Context) {
 	}
 
 	if !h.storage.FileExists(p.FilePath) {
+		if p.SourceType != "" && p.SourceType != "user_upload" {
+			c.JSON(http.StatusConflict, gin.H{"error": "external_source", "source_type": p.SourceType})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "package file not found on disk"})
 		return
 	}
@@ -156,6 +160,10 @@ func (h *PackageHandler) PreviewPackageItem(c *gin.Context) {
 	}
 
 	if !h.storage.FileExists(p.FilePath) {
+		if p.SourceType != "" && p.SourceType != "user_upload" {
+			c.JSON(http.StatusConflict, gin.H{"error": "external_source", "source_type": p.SourceType})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "package file not found on disk"})
 		return
 	}

@@ -24,6 +24,7 @@ type Material struct {
 	FileSize      int64          `json:"file_size"`
 	MimeType      sql.NullString `json:"mime_type"`
 	DownloadCount int64          `json:"download_count"`
+	ThanksCount   int64          `json:"thanks_count"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 }
@@ -121,6 +122,7 @@ type CoursePackage struct {
 	FileSize      int64          `json:"file_size"`
 	TotalFiles    int            `json:"total_files"`
 	DownloadCount int64          `json:"download_count"`
+	ThanksCount   int64          `json:"thanks_count"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 }

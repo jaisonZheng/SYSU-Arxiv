@@ -85,7 +85,7 @@ export default function Help() {
           <p className="text-[14.5px] text-[--color-ink-700] mt-4 leading-relaxed">
             这是中山大学同学之间的资料分享小角落 —— 不收一分钱，靠彼此的善意运转。
             <br />
-            <span className="text-[--color-ink-500]">收下了别忘记，自己有空也回传一份。</span>
+            <span className="text-[--color-ink-500]">收下了别忘记，自己有空也上传一份。</span>
           </p>
         </div>
       </section>

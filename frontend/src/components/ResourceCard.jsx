@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { api } from '../api/client'
+import ThankButton from './ThankButton'
 import {
   timeAgo,
   subCategoryMeta,
@@ -60,17 +61,17 @@ export default function ResourceCard({ material }) {
 
       {/* 右：内容 */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
-          <span className="chip bg-[--color-camphor-50] text-[--color-camphor-700]">
+        <div className="flex items-start gap-1.5 flex-wrap mb-1.5">
+          <span className="chip bg-[--color-camphor-50] text-[--color-camphor-700] border border-[--color-camphor-100]">
             {cat.emoji} {cat.label}
           </span>
           {sub && (
-            <span className="chip bg-[--color-cream-200] text-[--color-ink-700]">
+            <span className="chip bg-[--color-mist-50] text-[--color-mist-500] border border-[--color-mist-100]">
               {sub.label}
             </span>
           )}
           {material.year && (
-            <span className="chip bg-[--color-honey-50] text-[--color-honey-700]">
+            <span className="chip bg-[--color-honey-50] text-[--color-honey-700] border border-[--color-honey-100]">
               {material.year} 年
             </span>
           )}
@@ -98,7 +99,8 @@ export default function ResourceCard({ material }) {
               {material.uploader_name || '匿名同学'} · {timeAgo(material.created_at)}
             </span>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
+            <ThankButton id={material.id} initialCount={material.thanks_count || 0} />
             <span className="inline-flex items-center gap-1 text-[12px] text-[--color-ink-500]">
               <Download className="w-3.5 h-3.5" />
               {material.download_count || 0}

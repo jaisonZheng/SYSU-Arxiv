@@ -72,7 +72,12 @@ export const api = {
     body: formData,
   }),
 
+  // Thanks
+  thankMaterial: (id) => fetchJSON(`/api/materials/${id}/thank`, { method: 'POST' }),
+  thankPackage: (id) => fetchJSON(`/api/packages/${id}/thank`, { method: 'POST' }),
+
   // Stats
   getTotalDownloads: () => fetchJSON('/api/stats/downloads'),
   getTotalUploads: () => fetchJSON('/api/stats/uploads'),
+  getTotalThanks: () => fetchJSON('/api/stats/thanks'),
 };
