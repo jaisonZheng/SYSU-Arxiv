@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Search, Sparkles, ArrowRight, FileText, BookOpen, Package, Clock, Heart,
-  GraduationCap, Coffee, Sun
+  Coffee, Sun
 } from 'lucide-react'
 import { api } from '../api/client'
 import AnimatedCounter from '../components/AnimatedCounter'
@@ -371,9 +371,9 @@ function HeroVisual({ hello, packages, contributors }) {
         </div>
       )}
 
-      {/* 浮卡 2：贡献者 */}
+      {/* 浮卡 2：贡献者（桌面端显示，手机端隐藏避免遮挡） */}
       {c1 && (
-        <div className="absolute bottom-4 right-0 md:right-[-12px] bg-white rounded-2xl shadow-[var(--shadow)] border border-[--color-line] p-3.5 max-w-[240px] animate-float" style={{ animationDelay: '1.2s' }}>
+        <div className="hidden md:block absolute bottom-4 right-0 md:right-[-12px] bg-white rounded-2xl shadow-[var(--shadow)] border border-[--color-line] p-3.5 max-w-[240px] animate-float" style={{ animationDelay: '1.2s' }}>
           <div className="flex items-center gap-2 mb-2">
             <Heart className="w-3.5 h-3.5 text-[--color-kapok-400]" />
             <p className="text-[10.5px] font-semibold text-[--color-kapok-500] uppercase tracking-wider">谢谢同学们</p>
@@ -392,12 +392,6 @@ function HeroVisual({ hello, packages, contributors }) {
         </div>
       )}
 
-      {/* 浮卡 3：榕风 */}
-      <div className="absolute top-[44%] right-[-6px] md:right-2 bg-[--color-camphor-700] text-white rounded-2xl shadow-[var(--shadow)] px-3 py-2 animate-float" style={{ animationDelay: '0.8s' }}>
-        <div className="flex items-center gap-2 text-[12px] font-semibold tracking-wide">
-          <GraduationCap className="w-3.5 h-3.5" /> 中大榕树角落
-        </div>
-      </div>
     </div>
   )
 }

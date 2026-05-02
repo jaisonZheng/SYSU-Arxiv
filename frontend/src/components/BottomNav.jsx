@@ -1,12 +1,11 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, FileText, BookOpen, Package, Sparkles } from 'lucide-react'
+import { Home, FileText, BookOpen, Package } from 'lucide-react'
 
 const navItems = [
   { path: '/',                label: '首页',   icon: Home },
   { path: '/course-packages', label: '课程包', icon: Package },
   { path: '/past-exams',      label: '真题',   icon: FileText },
   { path: '/study-materials', label: '资料',   icon: BookOpen },
-  { path: '/upload',          label: '分享',   icon: Sparkles, primary: true },
 ]
 
 export default function BottomNav() {
@@ -19,17 +18,6 @@ export default function BottomNav() {
         {navItems.map((item) => {
           const active = isActive(item.path)
           const Icon = item.icon
-          if (item.primary) {
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="-mt-6 mx-1 grid place-items-center w-14 h-14 rounded-full bg-gradient-to-br from-[--color-honey-400] to-[--color-kapok-400] text-white shadow-[0_14px_28px_-10px_rgba(244,125,44,0.55)] active:scale-95 transition-transform"
-              >
-                <Icon className="w-5 h-5" />
-              </Link>
-            )
-          }
           return (
             <Link
               key={item.path}
