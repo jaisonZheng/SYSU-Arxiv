@@ -322,3 +322,17 @@ input:focus, select:focus, textarea:focus { outline: none; }
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+/* ----------------------------------------------------------------
+ * Markdown 预览：约束公式 / 表格 / 代码块的横向溢出
+ * ---------------------------------------------------------------- */
+.md-preview > :first-child { margin-top: 0; }
+.md-preview > :last-child  { margin-bottom: 0; }
+.md-preview .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 2px 0;
+}
+.md-preview pre::-webkit-scrollbar { height: 6px; }
+.md-preview pre::-webkit-scrollbar-thumb { background: rgba(242, 234, 220, 0.25); border-radius: 999px; }

@@ -9,6 +9,7 @@ import { api } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
 import SectionHeading from '../components/SectionHeading'
 import ThankButton from '../components/ThankButton'
+import MarkdownPreview from '../components/MarkdownPreview'
 import {
   timeAgo, formatDate, formatSize, avatarLetter, avatarColor,
   categoryMeta, subCategoryMeta,
@@ -34,7 +35,11 @@ function FilePreview({ url, fileName, fileType }) {
       </div>
     )
   }
-  if (/\.(txt|md|c|cpp|h|py|js|html)$/i.test(ext) || ext.includes('text')) {
+  // Markdown：通过 react-markdown + KaTeX 渲染（支持 $...$ 公式）
+  if (/\.md$/i.test(ext) || /markdown/i.test(ext)) {
+    return <MarkdownPreview url={url} fileName={fileName} />
+  }
+  if (/\.(txt|c|cpp|h|py|js|html)$/i.test(ext) || ext.includes('text')) {
     return (
       <div className="w-full bg-[--color-cream-50] p-2">
         <iframe src={url} className="w-full h-[560px] border-0 rounded-2xl bg-white" title={fileName} />
