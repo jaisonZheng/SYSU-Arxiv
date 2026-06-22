@@ -7,13 +7,11 @@ export default function Footer() {
       <div className="max-w-[1180px] mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[--color-camphor-400] to-[--color-camphor-600] grid place-items-center">
-              <span className="text-white text-sm font-bold" style={{ fontFamily: 'var(--font-serif)' }}>同</span>
-            </div>
-            <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>同窗角落</span>
+            <img src="/logo-nav.png" alt="破壁计划" className="w-8 h-8 rounded-xl object-cover" />
+            <span className="text-base font-bold tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>破壁计划</span>
           </div>
           <p className="text-[13.5px] text-[--color-ink-500] leading-relaxed max-w-xs">
-            一个由中大同学共同维护的资料分享小角落。
+            中大同学一起拆掉信息壁垒，把资料分享给需要的人。
             <br />笔者愿，把好东西无偿地传递给学弟学妹。
           </p>
           <p className="text-[12px] text-[--color-ink-400]">由 <span className="text-[--color-ink-700] font-medium">中山大学</span> 在校与离校的同学贡献维护</p>
@@ -39,7 +37,7 @@ export default function Footer() {
             <Mail className="w-4 h-4" /> zhengzsh5@mail2.sysu.edu.cn
           </a>
           <p className="text-[12px] text-[--color-ink-400] pt-2">
-            ©  {new Date().getFullYear()} 同窗角落 · 不收一分钱，靠彼此的善意运转
+            ©  {new Date().getFullYear()} 破壁计划 · 不收一分钱，靠彼此的善意运转
           </p>
         </div>
       </div>

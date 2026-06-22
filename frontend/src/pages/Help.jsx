@@ -8,13 +8,13 @@ import { Github } from '../components/icons'
 const sections = [
   {
     icon: Heart,
-    title: '为什么会有这个角落',
+    title: '为什么会有破壁计划',
     tone: 'kapok',
     body: (
       <p>
         每到期中期末，总会看到同学在校园群里到处问资料，也时常碰见有「倒狗」高价倒卖原本是同学们好心整理的笔记 ——
         本来是免费的善意，被赋上了价签。<br /><br />
-        所以在某个周末顺手搭了这个网站，希望中大的师生能多一个可以彼此分享的小角落。
+        所以在某个周末顺手搭了这个网站，希望中大的师生能多一个打破信息差、彼此分享的地方。
         <span className="text-[--color-ink-900] font-semibold">把信息差抹平，福泽后人。</span>
       </p>
     ),
@@ -72,18 +72,16 @@ export default function Help() {
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[--color-cream-100] via-white to-[--color-camphor-50] px-6 md:px-9 py-8 md:py-10">
         <div className="absolute -top-10 -right-8 text-[180px] opacity-15 select-none pointer-events-none animate-float">🌱</div>
         <div className="relative max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-block w-6 h-px bg-[--color-camphor-500]" />
+          <div className="mb-2">
             <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-[--color-camphor-700]">
-              About · 关于角落
+              About · 关于破壁计划
             </span>
           </div>
           <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight text-[--color-ink-900] leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            一个小角落，<br />
-            想让<span className="text-[--color-camphor-700]">资料</span>回到<span className="text-[--color-kapok-400]">免费</span>的样子
+            知识不该有围墙。
           </h1>
           <p className="text-[14.5px] text-[--color-ink-700] mt-4 leading-relaxed">
-            这是中山大学同学之间的资料分享小角落 —— 不收一分钱，靠彼此的善意运转。
+            这是中山大学同学之间的资料共享行动 —— 不收一分钱，靠彼此的善意运转。
             <br />
             <span className="text-[--color-ink-500]">收下了别忘记，自己有空也上传一份。</span>
           </p>
@@ -152,7 +150,7 @@ export default function Help() {
         <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-[--color-camphor-100] blur-3xl opacity-50" />
         <div className="relative">
           <p className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-[--color-camphor-700] mb-2 flex items-center gap-2">
-            <Leaf className="w-3.5 h-3.5" /> 角落里的小契约
+            <Leaf className="w-3.5 h-3.5" /> 破壁计划的小契约
           </p>
           <h2 className="text-[20px] md:text-[24px] font-bold tracking-tight text-[--color-ink-900] mb-5" style={{ fontFamily: 'var(--font-display)' }}>
             三件可以让这里更暖的事
@@ -181,7 +179,7 @@ export default function Help() {
           <Coffee className="w-3.5 h-3.5" /> 感谢看到这里
         </p>
         <h3 className="text-[18px] md:text-[22px] font-bold text-[--color-ink-900] mb-4" style={{ fontFamily: 'var(--font-display)' }}>
-          准备好让角落更暖一点了吗？
+          准备好拆掉下一堵墙了吗？
         </h3>
         <div className="inline-flex items-center gap-3 flex-wrap justify-center">
           <button

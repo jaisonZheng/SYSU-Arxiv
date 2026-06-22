@@ -18,8 +18,7 @@ export default function SectionHeading({ kicker, title, hint, action, accent = '
     <div className="flex items-end justify-between gap-4 mb-5">
       <div className="min-w-0">
         {kicker && (
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="inline-block w-6 h-px" style={{ background: accentColor }} />
+          <div className="mb-1.5">
             <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold" style={{ color: accentColor }}>
               {kicker}
             </span>

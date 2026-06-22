@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Home, FileText, BookOpen, Package } from 'lucide-react'
+import { Home, FileText, BookOpen, Package, Compass } from 'lucide-react'
 
 const navItems = [
   { path: '/',                label: '首页',   icon: Home },
   { path: '/course-packages', label: '课程包', icon: Package },
   { path: '/past-exams',      label: '真题',   icon: FileText },
   { path: '/study-materials', label: '资料',   icon: BookOpen },
+  { path: '/experience',      label: '攻略',   icon: Compass },
 ]
 
 export default function BottomNav() {

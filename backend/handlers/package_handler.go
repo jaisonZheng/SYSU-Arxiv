@@ -12,17 +12,28 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"sysu-arxiv/db"
+	"sysu-arxiv/middleware"
 	"sysu-arxiv/models"
 	"sysu-arxiv/storage"
 )
 
 type PackageHandler struct {
-	store     *db.PackageStore
-	storage   *storage.LocalStorage
+	store       *db.PackageStore
+	quotaStore  *db.QuotaStore
+	recordStore *db.RecordStore
+	storage     *storage.LocalStorage
 }
 
 func NewPackageHandler(store *db.PackageStore, storage *storage.LocalStorage) *PackageHandler {
 	return &PackageHandler{store: store, storage: storage}
+}
+
+func (h *PackageHandler) SetQuotaStore(qs *db.QuotaStore) {
+	h.quotaStore = qs
+}
+
+func (h *PackageHandler) SetRecordStore(rs *db.RecordStore) {
+	h.recordStore = rs
 }
 
 func (h *PackageHandler) RegisterRoutes(r *gin.Engine) {
@@ -31,10 +42,16 @@ func (h *PackageHandler) RegisterRoutes(r *gin.Engine) {
 		api.GET("/packages", h.ListPackages)
 		api.GET("/packages/:id", h.GetPackage)
 		api.GET("/packages/:id/items", h.GetPackageItems)
-		api.GET("/packages/:id/download", h.DownloadPackage)
 		api.GET("/packages/:id/preview/*path", h.PreviewPackageItem)
 		api.GET("/packages/courses", h.GetPackageCourses)
-		api.POST("/packages", h.CreatePackage)
+	}
+
+	// Auth-required routes
+	auth := r.Group("/api")
+	auth.Use(middleware.AuthRequired())
+	{
+		auth.POST("/packages", h.CreatePackage)
+		auth.GET("/packages/:id/download", h.DownloadPackage)
 	}
 }
 
@@ -117,6 +134,8 @@ func (h *PackageHandler) GetPackageItems(c *gin.Context) {
 }
 
 func (h *PackageHandler) DownloadPackage(c *gin.Context) {
+	userID := c.GetInt64("userID")
+
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -138,7 +157,36 @@ func (h *PackageHandler) DownloadPackage(c *gin.Context) {
 		return
 	}
 
+	// Check quota
+	if h.quotaStore != nil {
+		user, err := db.NewUserStore().GetByID(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
+			return
+		}
+		weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)
+		quota, err := h.quotaStore.GetOrCreateQuota(userID, weekStart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get quota"})
+			return
+		}
+		if quota.UsedQuota >= quota.TotalQuota {
+			c.JSON(http.StatusForbidden, gin.H{"error": "quota_exceeded"})
+			return
+		}
+		if _, err := h.quotaStore.IncrementUsed(userID, weekStart); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update quota"})
+			return
+		}
+	}
+
+	// Record download
+	if h.recordStore != nil {
+		h.recordStore.CreateDownloadRecord(userID, id, "package")
+	}
+
 	h.store.IncrementDownloadCount(id)
+	db.IncrementSiteStat("total_downloads")
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", p.FileName))
 	c.Header("Content-Type", "application/zip")
@@ -204,6 +252,8 @@ func (h *PackageHandler) PreviewPackageItem(c *gin.Context) {
 				contentType = "image/png"
 			case ".gif":
 				contentType = "image/gif"
+			case ".webp":
+				contentType = "image/webp"
 			case ".txt", ".md", ".c", ".cpp", ".h", ".py", ".js":
 				contentType = "text/plain; charset=utf-8"
 			case ".html":
@@ -232,6 +282,8 @@ func (h *PackageHandler) GetPackageCourses(c *gin.Context) {
 }
 
 func (h *PackageHandler) CreatePackage(c *gin.Context) {
+	userID := c.GetInt64("userID")
+
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请选择要上传的文件"})
@@ -270,23 +322,30 @@ func (h *PackageHandler) CreatePackage(c *gin.Context) {
 		}
 		totalFiles++
 		ext := strings.ToLower(filepath.Ext(f.Name))
+		mimeType := mimeTypeForExt(ext)
 		items = append(items, models.PackageItem{
 			Path:     f.Name,
 			FileName: filepath.Base(f.Name),
 			FileSize: int64(f.UncompressedSize64),
 			FileType: ext,
+			MimeType: mimeType,
 		})
 	}
 
 	p := &models.CoursePackage{
-		Title:       c.PostForm("title"),
-		Description: c.PostForm("description"),
-		CourseName:  c.PostForm("course_name"),
-		SourceType:  "user_upload",
-		FileName:    fileName,
-		FilePath:    filePath,
-		FileSize:    fileSize,
-		TotalFiles:  totalFiles,
+		Title:        c.PostForm("title"),
+		Description:  c.PostForm("description"),
+		CourseName:   c.PostForm("course_name"),
+		SourceType:   "user_upload",
+		UploaderID:   sql.NullInt64{Int64: userID, Valid: true},
+		FileName:     fileName,
+		FilePath:     filePath,
+		FileSize:     fileSize,
+		TotalFiles:   totalFiles,
+	}
+
+	if uploader := c.PostForm("uploader_name"); uploader != "" {
+		p.UploaderName = sql.NullString{String: uploader, Valid: true}
 	}
 
 	if p.Title == "" {
@@ -316,8 +375,46 @@ func (h *PackageHandler) CreatePackage(c *gin.Context) {
 		}
 	}
 
+	// Record upload
+	if h.recordStore != nil {
+		h.recordStore.CreateUploadRecord(userID, id, "package")
+	}
+
+	// Add bonus quota (+3) for upload
+	if h.quotaStore != nil {
+		user, _ := db.NewUserStore().GetByID(userID)
+		if user != nil {
+			weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)
+			h.quotaStore.AddBonus(userID, weekStart, 3)
+		}
+	}
+
+	db.IncrementSiteStat("total_uploads")
+
 	c.JSON(http.StatusCreated, gin.H{
 		"id":      id,
 		"message": "upload successful",
 	})
+}
+
+func mimeTypeForExt(ext string) string {
+	ext = strings.ToLower(ext)
+	switch ext {
+	case ".pdf":
+		return "application/pdf"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	case ".txt", ".md", ".c", ".cpp", ".h", ".py", ".js":
+		return "text/plain; charset=utf-8"
+	case ".html":
+		return "text/html; charset=utf-8"
+	default:
+		return ""
+	}
 }

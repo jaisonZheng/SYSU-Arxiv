@@ -1,5 +1,5 @@
 /**
- * 榕树橘猫 · 同窗角落吉祥物
+ * 榕树橘猫 · 破壁计划吉祥物
  * 一只在榕树下的大橘
  * variant: reading | sleeping | sunshield
  */

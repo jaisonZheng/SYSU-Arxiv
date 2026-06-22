@@ -177,8 +177,7 @@ export default function Explore({ category, title }) {
       <section className={`relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br ${tone.ring} px-6 md:px-9 py-7 md:py-9`}>
         <div className="absolute -top-8 -right-8 text-[160px] opacity-15 select-none pointer-events-none rotate-[6deg]">{hero.emoji}</div>
         <div className="relative max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`inline-block w-6 h-px ${tone.kicker}`} style={{ background: 'currentColor' }} />
+          <div className="mb-2">
             <span className={`text-[11.5px] uppercase tracking-[0.22em] font-semibold ${tone.kicker}`}>{hero.kicker}</span>
           </div>
           <h1 className="text-[26px] md:text-[34px] font-bold tracking-tight text-[--color-ink-900] leading-tight" style={{ fontFamily: 'var(--font-display)' }}>

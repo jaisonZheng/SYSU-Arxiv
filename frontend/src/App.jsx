@@ -6,6 +6,10 @@ import CoursePackages from './pages/CoursePackages'
 import Detail from './pages/Detail'
 import Upload from './pages/Upload'
 import Help from './pages/Help'
+import Experience from './pages/Experience'
+import Login from './pages/Login'
+import Profile from './pages/Profile'
+import HotRanking from './pages/HotRanking'
 
 function App() {
   return (
@@ -14,11 +18,15 @@ function App() {
         <Route index element={<Home />} />
         <Route path="past-exams" element={<Explore key="past-exams" category="past_exam" title="历年真题" />} />
         <Route path="study-materials" element={<Explore key="study-materials" category="study_material" title="学习资料" />} />
+        <Route path="experience" element={<Experience category="experience" title="经验攻略" />} />
         <Route path="course-packages" element={<CoursePackages />} />
         <Route path="material/:id" element={<Detail />} />
         <Route path="package/:id" element={<Detail isPackage />} />
         <Route path="upload" element={<Upload />} />
         <Route path="help" element={<Help />} />
+        <Route path="hot-ranking" element={<HotRanking />} />
+        <Route path="login" element={<Login />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
   )

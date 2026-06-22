@@ -8,9 +8,10 @@ import { api } from '../api/client'
 import { formatSize, cheer } from '../lib/format'
 
 const categories = [
-  { value: 'past_exam',      label: '历年真题',   emoji: '📝', desc: '期末/期中卷子、模拟题' },
-  { value: 'study_material', label: '学习资料',   emoji: '📓', desc: '笔记、课件、总结、答案' },
-  { value: 'package',        label: '课程资源包', emoji: '🎁', desc: '整门课打包，ZIP 格式最佳' },
+  { value: 'past_exam',      label: '历年真题',   emoji: '📝', desc: '期末/期中卷子、模拟题',   tone: 'kapok' },
+  { value: 'study_material', label: '学习资料',   emoji: '📓', desc: '笔记、课件、总结、答案',   tone: 'camphor' },
+  { value: 'package',        label: '课程资源包', emoji: '🎁', desc: '整门课打包，ZIP 格式最佳', tone: 'honey' },
+  { value: 'experience',     label: '经验攻略',   emoji: '🧭', desc: '转专业、留学、新生、二次遴选等经验', tone: 'mist' },
 ]
 
 const subCategories = [
@@ -25,6 +26,7 @@ const subCategories = [
 ]
 
 const allowedExt = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.md', '.jpg', '.jpeg', '.png', '.zip', '.rar', '.7z']
+const MAX_SIZE = 200 * 1024 * 1024;
 
 export default function UploadPage() {
   const navigate = useNavigate()
@@ -55,13 +57,30 @@ export default function UploadPage() {
 
   const addFiles = (newFiles) => {
     const isPackage = form.category === 'package'
-    const valid = newFiles.filter((f) => {
+    const rejected = []
+    const tooLarge = []
+    const valid = []
+
+    for (const f of newFiles) {
       const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase()
-      if (!allowedExt.includes(ext)) return false
-      if (isPackage && ext !== '.zip') return false
-      if (!isPackage && ext === '.zip') return false
-      return true
-    })
+      if (!allowedExt.includes(ext)) {
+        rejected.push(f.name)
+        continue
+      }
+      if (f.size > MAX_SIZE) {
+        tooLarge.push(f.name)
+        continue
+      }
+      valid.push(f)
+    }
+
+    if (rejected.length > 0) {
+      setUploadResult({ success: false, error: `不支持的文件格式：${rejected.join('、')}` })
+    }
+    if (tooLarge.length > 0) {
+      setUploadResult({ success: false, error: `文件「${tooLarge[0]}」超过 200MB 限制，请压缩后上传` })
+    }
+
     setFiles((prev) => [...prev, ...valid])
     if (valid.length > 0 && !form.title) {
       const first = valid[0]
@@ -104,9 +123,10 @@ export default function UploadPage() {
       if (files.length > 0 && !files.every(f => f.name.toLowerCase().endsWith('.zip'))) {
         errors.push('「课程资源包」仅支持 ZIP 格式')
       }
-    } else {
-      if (files.some(f => f.name.toLowerCase().endsWith('.zip'))) {
-        errors.push('普通资料不能上传 ZIP，如需上传课程包请选择「课程资源包」分类')
+    }
+    for (const f of files) {
+      if (f.size > MAX_SIZE) {
+        errors.push(`文件「${f.name}」超过 200MB 限制`)
       }
     }
     return errors
@@ -171,8 +191,7 @@ export default function UploadPage() {
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#FFF6EC] via-white to-[#FFEFE9] px-6 md:px-9 py-7 md:py-8">
         <div className="absolute -top-6 -right-6 text-[140px] opacity-15 select-none pointer-events-none animate-float">🤝</div>
         <div className="relative">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-block w-6 h-px bg-[--color-kapok-400]" />
+          <div className="mb-2">
             <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-[--color-kapok-500]">
               传一份心意
             </span>
@@ -183,7 +202,7 @@ export default function UploadPage() {
           <p className="text-[14px] md:text-[14.5px] text-[--color-ink-700] mt-2 leading-relaxed max-w-2xl">
             一份小笔记，可能就让一位学弟学妹少熬一夜。
             <br className="hidden md:block" />
-            <span className="text-[--color-ink-500]">不收一分钱，靠的就是大家这点善意。</span>
+            <span className="text-[--color-ink-500]">拆掉一堵墙，靠的就是大家这点善意。</span>
           </p>
         </div>
       </section>
@@ -210,12 +229,12 @@ export default function UploadPage() {
             把文件拖进来 ——  或者点这里挑一份
           </p>
           <p className="text-[12.5px] text-[--color-ink-500]">
-            支持 PDF / DOC / PPT / XLS / TXT / MD / 图片 / ZIP，最大 100MB
+            支持 PDF / DOC / PPT / XLS / TXT / MD / 图片 / ZIP，最大 200MB
           </p>
           <p className="text-[11.5px] text-[--color-ink-400] mt-2">
             先选分类再传文件 —— 课程资源包仅支持 ZIP 格式 🎁
           </p>
-          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} accept={form.category === 'package' ? '.zip' : '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.jpg,.jpeg,.png,.zip,.rar,.7z'} />
         </div>
 
         {/* 已选文件列表 */}
@@ -263,24 +282,76 @@ export default function UploadPage() {
         {/* 分类大卡 */}
         <div className="mt-7">
           <Label required>给它选个家</Label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
             {categories.map((c) => {
               const active = form.category === c.value
+              const tone = c.tone || 'camphor'
+              const styles = {
+                kapok: {
+                  border: 'border-[--color-kapok-500]',
+                  bg: 'bg-gradient-to-br from-[#FFEFE9] to-[#FFD5C7]',
+                  shadow: 'shadow-[0_12px_32px_-12px_rgba(200,65,43,0.55)]',
+                  ring: 'ring-[3px] ring-[#FFD5C7] ring-offset-2',
+                  check: 'bg-[--color-kapok-500] shadow-[0_4px_10px_-4px_rgba(200,65,43,0.6)]',
+                  label: 'text-[--color-kapok-700]',
+                  hoverBorder: 'hover:border-[--color-kapok-300]',
+                },
+                camphor: {
+                  border: 'border-[--color-camphor-600]',
+                  bg: 'bg-gradient-to-br from-[#E8F5EC] to-[#D0EBD8]',
+                  shadow: 'shadow-[0_12px_32px_-12px_rgba(45,106,79,0.55)]',
+                  ring: 'ring-[3px] ring-[#D0EBD8] ring-offset-2',
+                  check: 'bg-[--color-camphor-600] shadow-[0_4px_10px_-4px_rgba(45,106,79,0.6)]',
+                  label: 'text-[--color-camphor-800]',
+                  hoverBorder: 'hover:border-[--color-camphor-300]',
+                },
+                honey: {
+                  border: 'border-[--color-honey-500]',
+                  bg: 'bg-gradient-to-br from-[#FFF6EC] to-[#FFE6CB]',
+                  shadow: 'shadow-[0_12px_32px_-12px_rgba(244,125,44,0.55)]',
+                  ring: 'ring-[3px] ring-[#FFE6CB] ring-offset-2',
+                  check: 'bg-[--color-honey-500] shadow-[0_4px_10px_-4px_rgba(244,125,44,0.6)]',
+                  label: 'text-[--color-honey-700]',
+                  hoverBorder: 'hover:border-[--color-honey-300]',
+                },
+                mist: {
+                  border: 'border-[--color-mist-500]',
+                  bg: 'bg-gradient-to-br from-[#EEF3F8] to-[#D4E0EC]',
+                  shadow: 'shadow-[0_12px_32px_-12px_rgba(90,120,150,0.55)]',
+                  ring: 'ring-[3px] ring-[#D4E0EC] ring-offset-2',
+                  check: 'bg-[--color-mist-500] shadow-[0_4px_10px_-4px_rgba(90,120,150,0.6)]',
+                  label: 'text-[--color-mist-700]',
+                  hoverBorder: 'hover:border-[--color-mist-300]',
+                },
+              }
+              const s = styles[tone]
               return (
                 <button
                   key={c.value}
                   type="button"
                   onClick={() => setForm((p) => ({ ...p, category: c.value }))}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-left border-2 transition-all ${
+                  className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left border-2 transition-all duration-300 ${
                     active
-                      ? 'border-[--color-camphor-400] bg-[--color-camphor-50] shadow-[0_8px_22px_-12px_rgba(45,106,79,0.45)]'
-                      : 'border-[--color-line] bg-white hover:border-[--color-camphor-200] hover:bg-[--color-cream-50]'
+                      ? `${s.border} ${s.bg} ${s.shadow} ${s.ring}`
+                      : `border-[--color-line] bg-white ${s.hoverBorder} hover:bg-[--color-cream-50] hover:shadow-[var(--shadow-sm)]`
                   }`}
                 >
-                  <span className="text-2xl">{c.emoji}</span>
-                  <span>
-                    <span className="block text-[14px] font-semibold text-[--color-ink-900]">{c.label}</span>
-                    <span className="block text-[11.5px] text-[--color-ink-500]">{c.desc}</span>
+                  {/* 勾选标记 */}
+                  {active && (
+                    <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full text-white grid place-items-center ${s.check}`}>
+                      <CheckCircle className="w-3.5 h-3.5" />
+                    </span>
+                  )}
+                  <span className={`text-2xl transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
+                    {c.emoji}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className={`block text-[14px] font-semibold transition-colors ${active ? s.label : 'text-[--color-ink-900]'}`}>
+                      {c.label}
+                    </span>
+                    <span className={`block text-[11.5px] transition-colors ${active ? 'text-[--color-ink-600]' : 'text-[--color-ink-500]'}`}>
+                      {c.desc}
+                    </span>
                   </span>
                 </button>
               )
@@ -443,7 +514,6 @@ export default function UploadPage() {
             <ul className="text-[13px] text-[--color-camphor-700] space-y-1">
               {uploadResult.results.map((r, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[--color-camphor-400]" />
                   <span>{r.filename}</span>
                 </li>
               ))}

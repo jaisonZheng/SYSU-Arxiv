@@ -1,13 +1,15 @@
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { Search, Sparkles, Heart, Menu, X } from 'lucide-react'
+import { Search, Sparkles, Heart, Menu, X, User } from 'lucide-react'
 import { Github } from './icons'
 import { useEffect, useState } from 'react'
+import { api } from '../api/client'
 
 const navItems = [
   { path: '/',                  label: '首页',   end: true },
   { path: '/course-packages',   label: '课程包' },
   { path: '/past-exams',        label: '历年真题' },
   { path: '/study-materials',   label: '学习资料' },
+  { path: '/experience',        label: '经验攻略' },
   { path: '/help',              label: '关于' },
 ]
 
@@ -17,6 +19,7 @@ export default function TopNav() {
   const [search, setSearch] = useState('')
   const [scrolled, setScrolled] = useState(false)
   const [openMobile, setOpenMobile] = useState(false)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6)
@@ -27,6 +30,33 @@ export default function TopNav() {
 
   useEffect(() => { setOpenMobile(false) }, [location.pathname])
 
+  // Load user info on mount if token exists
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setUser(null)
+      return
+    }
+    // Try to get cached user first
+    const cached = localStorage.getItem('user')
+    if (cached) {
+      try { setUser(JSON.parse(cached)) } catch {}
+    }
+    // Then fetch fresh data
+    api.getMe()
+      .then((res) => {
+        const u = res.user || res
+        setUser(u)
+        localStorage.setItem('user', JSON.stringify(u))
+      })
+      .catch(() => {
+        // Token invalid, clear it
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setUser(null)
+      })
+  }, [])
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (search.trim()) {
@@ -34,6 +64,8 @@ export default function TopNav() {
       setSearch('')
     }
   }
+
+  const userInitial = user?.nickname?.[0] || user?.email?.[0] || 'U'
 
   return (
     <header
@@ -47,13 +79,15 @@ export default function TopNav() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
           <div className="relative">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[--color-camphor-400] to-[--color-camphor-600] grid place-items-center shadow-[0_8px_18px_-8px_rgba(45,106,79,0.45)] group-hover:scale-105 group-hover:rotate-[-4deg] transition-transform duration-500">
-              <span className="text-white text-[15px] font-bold tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>同</span>
-            </div>
+            <img
+              src="/logo-nav.png"
+              alt="破壁计划"
+              className="w-9 h-9 rounded-2xl object-cover shadow-[0_8px_18px_-8px_rgba(45,106,79,0.45)] group-hover:scale-105 group-hover:rotate-[-4deg] transition-transform duration-500"
+            />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[--color-honey-400] ring-2 ring-[--color-cream-50]" />
           </div>
           <div className="hidden sm:flex flex-col leading-tight">
-            <span className="text-[16px] font-bold tracking-tight text-[--color-ink-900]" style={{ fontFamily: 'var(--font-display)' }}>同窗角落</span>
+            <span className="text-[16px] font-bold tracking-tight text-[--color-ink-900]" style={{ fontFamily: 'var(--font-display)' }}>破壁计划</span>
             <span className="text-[10.5px] text-[--color-ink-500] tracking-wide">SYSU · 资料共享社区</span>
           </div>
         </Link>
@@ -111,6 +145,37 @@ export default function TopNav() {
             分享一份
           </button>
 
+          {/* User area */}
+          {user ? (
+            <Link
+              to="/profile"
+              className="flex items-center gap-2 h-9 pl-1.5 pr-3 rounded-full bg-[--color-cream-100] hover:bg-[--color-cream-200] border border-[--color-line] transition-colors"
+            >
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.nickname || user.email}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+              ) : (
+                <span className="w-6 h-6 rounded-full bg-[--color-camphor-500] text-white text-[11px] font-bold grid place-items-center">
+                  {userInitial.toUpperCase()}
+                </span>
+              )}
+              <span className="text-[13px] font-medium text-[--color-ink-700] hidden sm:inline max-w-[80px] truncate">
+                {user.nickname || user.email?.split('@')[0] || '用户'}
+              </span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-[13px] font-semibold text-[--color-camphor-700] bg-[--color-camphor-50] border border-[--color-camphor-200] hover:bg-[--color-camphor-100] hover:border-[--color-camphor-300] transition-colors"
+            >
+              <User className="w-3.5 h-3.5" />
+              登录 / 注册
+            </button>
+          )}
+
           {/* Mobile toggle */}
           <button
             onClick={() => setOpenMobile((v) => !v)}
@@ -158,6 +223,21 @@ export default function TopNav() {
             >
               <Heart className="w-4 h-4" /> 分享一份资料
             </button>
+            {user ? (
+              <Link
+                to="/profile"
+                className="mt-2 w-full flex items-center justify-center gap-2 h-11 rounded-2xl text-sm font-medium bg-[--color-camphor-50] text-[--color-camphor-700]"
+              >
+                <User className="w-4 h-4" /> 我的主页
+              </Link>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                className="mt-2 w-full inline-flex items-center justify-center gap-2 h-11 rounded-2xl text-sm font-medium bg-[--color-camphor-50] text-[--color-camphor-700]"
+              >
+                <User className="w-4 h-4" /> 登录 / 注册
+              </button>
+            )}
           </div>
         </div>
       )}

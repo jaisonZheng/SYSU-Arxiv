@@ -38,12 +38,17 @@ func main() {
 
 	store := db.NewMaterialStore()
 	packageStore := db.NewPackageStore()
+	userStore := db.NewUserStore()
+	quotaStore := db.NewQuotaStore()
+	recordStore := db.NewRecordStore()
+	emailStore := db.NewEmailVerificationStore()
 	localStorage := storage.NewLocalStorage(uploadsPath)
 	// Package storage uses data dir as base so it can resolve packages/ relative paths
 	packageStorage := storage.NewLocalStorage(dataPath)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+	r.MaxMultipartMemory = 200 << 20
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORS())
 	r.Use(gin.Logger())
@@ -54,10 +59,20 @@ func main() {
 
 	materialHandler := handlers.NewMaterialHandler(store, localStorage)
 	materialHandler.SetPackageStore(packageStore)
+	materialHandler.SetQuotaStore(quotaStore)
+	materialHandler.SetRecordStore(recordStore)
 	materialHandler.RegisterRoutes(r)
 
 	packageHandler := handlers.NewPackageHandler(packageStore, packageStorage)
+	packageHandler.SetQuotaStore(quotaStore)
+	packageHandler.SetRecordStore(recordStore)
 	packageHandler.RegisterRoutes(r)
+
+	authHandler := handlers.NewAuthHandler(userStore, emailStore, quotaStore)
+	authHandler.RegisterRoutes(r)
+
+	userHandler := handlers.NewUserHandler(userStore, quotaStore, recordStore, emailStore, localStorage)
+	userHandler.RegisterRoutes(r)
 
 	r.GET("/health", materialHandler.Health)
 

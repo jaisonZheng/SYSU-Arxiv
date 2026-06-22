@@ -84,8 +84,7 @@ export default function CoursePackages() {
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#FFF6EC] to-[#FFE6CB] px-6 md:px-9 py-7 md:py-9">
         <div className="absolute -top-10 -right-8 text-[180px] opacity-15 select-none pointer-events-none rotate-[6deg]">🎁</div>
         <div className="relative max-w-2xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-block w-6 h-px bg-[--color-honey-700]" />
+          <div className="mb-2">
             <span className="text-[11.5px] uppercase tracking-[0.22em] font-semibold text-[--color-honey-700]">一站式 · 整门课</span>
           </div>
           <h1 className="text-[26px] md:text-[34px] font-bold tracking-tight text-[--color-ink-900] leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
@@ -224,8 +223,7 @@ function PackageCard({ pkg, index }) {
       <div className="absolute -top-3 -right-3 text-[80px] opacity-15 group-hover:opacity-25 group-hover:scale-110 group-hover:rotate-[6deg] transition-all duration-700 select-none pointer-events-none">{palette.emoji}</div>
 
       <div className="relative flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <span className={`w-1.5 h-1.5 rounded-full ${palette.dot}`} />
+        <div className="mb-2">
           <span className={`text-[10.5px] uppercase tracking-[0.18em] font-semibold ${palette.accent}`}>
             课程包 · {sourceLabel}
           </span>
@@ -258,10 +256,10 @@ function PackageCard({ pkg, index }) {
             className="w-6 h-6 rounded-full grid place-items-center text-[11px] font-bold shrink-0"
             style={{ background: ava.bg, color: ava.fg }}
           >
-            {avatarLetter(pkg.uploader_name || (pkg.source_type === 'github' ? 'GitHub' : '同'))}
+            {avatarLetter(pkg.uploader_name || '同')}
           </span>
           <span className="text-[12px] text-[--color-ink-500] truncate">
-            {pkg.uploader_name || (pkg.source_type === 'github' ? 'SYSU_Notebook' : 'Jaison')} · {timeAgo(pkg.created_at)}
+            {pkg.uploader_name || 'Jaison'} · {timeAgo(pkg.created_at)}
           </span>
         </div>
         <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-[--color-ink-900] shrink-0">

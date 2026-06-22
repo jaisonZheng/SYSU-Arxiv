@@ -25,6 +25,7 @@ type Material struct {
 	MimeType      sql.NullString `json:"mime_type"`
 	DownloadCount int64          `json:"download_count"`
 	ThanksCount   int64          `json:"thanks_count"`
+	UploaderID    sql.NullInt64  `json:"uploader_id"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
 }
@@ -42,6 +43,7 @@ func (m Material) MarshalJSON() ([]byte, error) {
 		FileType     interface{} `json:"file_type"`
 		UploaderName interface{} `json:"uploader_name"`
 		MimeType     interface{} `json:"mime_type"`
+		UploaderID   interface{} `json:"uploader_id"`
 	}{
 		Alias:        (*Alias)(&m),
 		SubCategory:  nullString(m.SubCategory),
@@ -53,6 +55,7 @@ func (m Material) MarshalJSON() ([]byte, error) {
 		FileType:     nullString(m.FileType),
 		UploaderName: nullString(m.UploaderName),
 		MimeType:     nullString(m.MimeType),
+		UploaderID:   nullInt64(m.UploaderID),
 	})
 }
 
@@ -117,6 +120,8 @@ type CoursePackage struct {
 	Department    sql.NullString `json:"department"`
 	SourceType    string         `json:"source_type"`
 	SourceName    sql.NullString `json:"source_name"`
+	UploaderName  sql.NullString `json:"uploader_name"`
+	UploaderID    sql.NullInt64  `json:"uploader_id"`
 	FileName      string         `json:"file_name"`
 	FilePath      string         `json:"file_path"`
 	FileSize      int64          `json:"file_size"`
@@ -131,12 +136,16 @@ func (p CoursePackage) MarshalJSON() ([]byte, error) {
 	type Alias CoursePackage
 	return json.Marshal(&struct {
 		*Alias
-		Department interface{} `json:"department"`
-		SourceName interface{} `json:"source_name"`
+		Department   interface{} `json:"department"`
+		SourceName   interface{} `json:"source_name"`
+		UploaderName interface{} `json:"uploader_name"`
+		UploaderID   interface{} `json:"uploader_id"`
 	}{
-		Alias:      (*Alias)(&p),
-		Department: nullString(p.Department),
-		SourceName: nullString(p.SourceName),
+		Alias:        (*Alias)(&p),
+		Department:   nullString(p.Department),
+		SourceName:   nullString(p.SourceName),
+		UploaderName: nullString(p.UploaderName),
+		UploaderID:   nullInt64(p.UploaderID),
 	})
 }
 

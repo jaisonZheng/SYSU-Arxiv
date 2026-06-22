@@ -1,14 +1,15 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   Download, FileText, ArrowLeft, Package, FileIcon, Image as ImageIcon, FileCode,
   ChevronRight as Chevron, ChevronDown, Heart, Sparkles, Calendar, Building2, BookOpen, User,
   ExternalLink,
 } from 'lucide-react'
-import { api } from '../api/client'
+import { api, isLoggedIn, triggerDownload } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
 import SectionHeading from '../components/SectionHeading'
 import ThankButton from '../components/ThankButton'
+import QuotaModal from '../components/QuotaModal'
 import {
   timeAgo, formatDate, formatSize, avatarLetter, avatarColor,
   categoryMeta, subCategoryMeta,
@@ -71,7 +72,8 @@ function PackageFileTree({ items, onPreview, activePath }) {
   const tree = useMemo(() => {
     const root = {}
     items.forEach((item) => {
-      const parts = item.path.split('/')
+      const normalizedPath = item.path.replace(/\\/g, '/')
+      const parts = normalizedPath.split('/').filter(Boolean)
       let current = root
       parts.forEach((part, idx) => {
         if (!current[part]) {
@@ -169,12 +171,14 @@ function PackageFileTree({ items, onPreview, activePath }) {
 export default function Detail({ isPackage }) {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [data, setData] = useState(null)
   const [related, setRelated] = useState([])
   const [packageItems, setPackageItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [previewItem, setPreviewItem] = useState(null)
+  const [showQuotaModal, setShowQuotaModal] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -200,10 +204,31 @@ export default function Detail({ isPackage }) {
     loadData()
   }, [id, isPackage])
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!data) return
-    const url = isPackage ? api.downloadPackage(data.id) : api.downloadMaterial(data.id)
-    window.open(url, '_blank')
+
+    if (!isLoggedIn()) {
+      navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
+      return
+    }
+
+    try {
+      const quota = await api.getMyQuota()
+      if (quota.remaining <= 0) {
+        setShowQuotaModal(true)
+        return
+      }
+      const url = isPackage ? api.downloadPackage(data.id) : api.downloadMaterial(data.id)
+      triggerDownload(url, data.file_name)
+    } catch (err) {
+      if (err.status === 401 || err.message === 'unauthorized') {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
+      } else {
+        console.error(err)
+      }
+    }
   }
 
   const isExternalPackage = isPackage && data?.source_type && data.source_type !== 'user_upload'
@@ -376,18 +401,18 @@ export default function Detail({ isPackage }) {
                 onClick={handleDownload}
                 className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
-                  <Download className="w-4 h-4" />
-                  收下{isPackage ? '整个资源包' : '这份资料'}
-                </button>
-                <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
-                  {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
+                <Download className="w-4 h-4" />
+                收下{isPackage ? '整个资源包' : '这份资料'}
+              </button>
+              <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
+                {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
+              </p>
+              {isPackage && (
+                <p className="text-center text-[11.5px] text-[--color-ink-400] mt-1">
+                  打包后的 ZIP，里面有 {m.total_files || packageItems.length} 个文件
                 </p>
-                {isPackage && (
-                  <p className="text-center text-[11.5px] text-[--color-ink-400] mt-1">
-                    打包后的 ZIP，里面有 {m.total_files || packageItems.length} 个文件
-                  </p>
-                )}
-              </>
+              )}
+            </>
 
             <div className="mt-4 pt-4 border-t border-dashed border-[--color-line] flex justify-center">
               <ThankButton
@@ -472,6 +497,14 @@ export default function Detail({ isPackage }) {
             {related.map((r) => <ResourceCard key={r.id} material={r} />)}
           </div>
         </section>
+      )}
+
+      {/* Quota Modal */}
+      {showQuotaModal && (
+        <QuotaModal
+          onClose={() => setShowQuotaModal(false)}
+          onNavigateUpload={() => navigate('/upload')}
+        />
       )}
     </div>
   )

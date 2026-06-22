@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"sysu-arxiv/db"
+	"sysu-arxiv/middleware"
 	"sysu-arxiv/models"
 	"sysu-arxiv/storage"
 )
@@ -18,6 +19,8 @@ import (
 type MaterialHandler struct {
 	store        *db.MaterialStore
 	packageStore *db.PackageStore
+	quotaStore   *db.QuotaStore
+	recordStore  *db.RecordStore
 	storage      *storage.LocalStorage
 }
 
@@ -29,14 +32,20 @@ func (h *MaterialHandler) SetPackageStore(ps *db.PackageStore) {
 	h.packageStore = ps
 }
 
+func (h *MaterialHandler) SetQuotaStore(qs *db.QuotaStore) {
+	h.quotaStore = qs
+}
+
+func (h *MaterialHandler) SetRecordStore(rs *db.RecordStore) {
+	h.recordStore = rs
+}
+
 func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	{
 		api.GET("/materials", h.ListMaterials)
-		api.GET("/materials/:id/download", h.DownloadMaterial)
-		api.GET("/materials/:id/preview", h.PreviewMaterial)
 		api.GET("/materials/:id", h.GetMaterial)
-		api.POST("/materials", h.CreateMaterial)
+		api.GET("/materials/:id/preview", h.PreviewMaterial)
 		api.GET("/materials/check-duplicate", h.CheckDuplicate)
 		api.GET("/departments", h.GetDepartments)
 		api.GET("/courses", h.GetCourses)
@@ -46,6 +55,14 @@ func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 		api.GET("/stats/thanks", h.GetTotalThanks)
 		api.POST("/materials/:id/thank", h.ThankMaterial)
 		api.POST("/packages/:id/thank", h.ThankPackage)
+	}
+
+	// Auth-required routes
+	auth := r.Group("/api")
+	auth.Use(middleware.AuthRequired())
+	{
+		auth.POST("/materials", h.CreateMaterial)
+		auth.GET("/materials/:id/download", h.DownloadMaterial)
 	}
 }
 
@@ -123,6 +140,8 @@ func (h *MaterialHandler) GetMaterial(c *gin.Context) {
 }
 
 func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
+	userID := c.GetInt64("userID")
+
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
@@ -136,12 +155,7 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 	allowedExts := map[string]bool{
 		".pdf": true, ".doc": true, ".docx": true, ".ppt": true, ".pptx": true,
 		".xls": true, ".xlsx": true, ".txt": true, ".md": true, ".jpg": true,
-		".jpeg": true, ".png": true, ".rar": true, ".7z": true,
-	}
-
-	if fileExt == ".zip" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ZIP 文件请通过「课程资源包」分类上传"})
-		return
+		".jpeg": true, ".png": true, ".rar": true, ".7z": true, ".zip": true,
 	}
 
 	if !allowedExts[fileExt] {
@@ -166,6 +180,7 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		Instructor:   sql.NullString{String: c.PostForm("instructor"), Valid: c.PostForm("instructor") != ""},
 		FileType:     sql.NullString{String: c.PostForm("file_type"), Valid: c.PostForm("file_type") != ""},
 		UploaderName: sql.NullString{String: c.PostForm("uploader_name"), Valid: c.PostForm("uploader_name") != ""},
+		UploaderID:   sql.NullInt64{Int64: userID, Valid: true},
 		FileName:     fileName,
 		FilePath:     filePath,
 		FileSize:     fileSize,
@@ -194,6 +209,22 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		return
 	}
 
+	// Record upload
+	if h.recordStore != nil {
+		h.recordStore.CreateUploadRecord(userID, id, "material")
+	}
+
+	// Add bonus quota (+3) for upload
+	if h.quotaStore != nil {
+		user, _ := db.NewUserStore().GetByID(userID)
+		if user != nil {
+			weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)
+			h.quotaStore.AddBonus(userID, weekStart, 3)
+		}
+	}
+
+	db.IncrementSiteStat("total_uploads")
+
 	c.JSON(http.StatusCreated, gin.H{
 		"id":      id,
 		"message": "upload successful",
@@ -201,6 +232,8 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 }
 
 func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
+	userID := c.GetInt64("userID")
+
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -218,7 +251,36 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		return
 	}
 
+	// Check quota
+	if h.quotaStore != nil {
+		user, err := db.NewUserStore().GetByID(userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
+			return
+		}
+		weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)
+		quota, err := h.quotaStore.GetOrCreateQuota(userID, weekStart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get quota"})
+			return
+		}
+		if quota.UsedQuota >= quota.TotalQuota {
+			c.JSON(http.StatusForbidden, gin.H{"error": "quota_exceeded"})
+			return
+		}
+		if _, err := h.quotaStore.IncrementUsed(userID, weekStart); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update quota"})
+			return
+		}
+	}
+
+	// Record download
+	if h.recordStore != nil {
+		h.recordStore.CreateDownloadRecord(userID, id, "material")
+	}
+
 	h.store.IncrementDownloadCount(id)
+	db.IncrementSiteStat("total_downloads")
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", m.FileName))
 	c.Header("Content-Type", m.MimeType.String)
@@ -326,36 +388,33 @@ func (h *MaterialHandler) GetTags(c *gin.Context) {
 }
 
 func (h *MaterialHandler) GetTotalDownloads(c *gin.Context) {
-	materialDownloads, err := h.store.GetTotalDownloads()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// Prefer persistent site_stats counter
+	total := db.GetSiteStat("total_downloads")
+	if total == 0 {
+		// Fallback: sum from tables
+		materialDownloads, _ := h.store.GetTotalDownloads()
+		var packageDownloads int64
+		if h.packageStore != nil {
+			packageDownloads, _ = h.packageStore.GetTotalDownloads()
+		}
+		total = materialDownloads + packageDownloads
 	}
-
-	var packageDownloads int64
-	if h.packageStore != nil {
-		packageDownloads, _ = h.packageStore.GetTotalDownloads()
-	}
-
-	total := materialDownloads + packageDownloads
 	c.JSON(http.StatusOK, gin.H{
 		"total_downloads": total,
 	})
 }
 
 func (h *MaterialHandler) GetTotalUploads(c *gin.Context) {
-	materialCount, err := h.store.GetTotalCount()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// Prefer persistent site_stats counter
+	total := db.GetSiteStat("total_uploads")
+	if total == 0 {
+		materialCount, _ := h.store.GetTotalCount()
+		var packageCount int64
+		if h.packageStore != nil {
+			packageCount, _ = h.packageStore.GetTotalCount()
+		}
+		total = materialCount + packageCount
 	}
-
-	var packageCount int64
-	if h.packageStore != nil {
-		packageCount, _ = h.packageStore.GetTotalCount()
-	}
-
-	total := materialCount + packageCount
 	c.JSON(http.StatusOK, gin.H{
 		"total_uploads": total,
 	})
@@ -371,6 +430,7 @@ func (h *MaterialHandler) ThankMaterial(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	db.IncrementSiteStat("total_thanks")
 	c.JSON(http.StatusOK, gin.H{"thanked": true})
 }
 
@@ -388,20 +448,21 @@ func (h *MaterialHandler) ThankPackage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	db.IncrementSiteStat("total_thanks")
 	c.JSON(http.StatusOK, gin.H{"thanked": true})
 }
 
 func (h *MaterialHandler) GetTotalThanks(c *gin.Context) {
-	materialThanks, err := h.store.GetTotalThanks()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	// Prefer persistent site_stats counter
+	total := db.GetSiteStat("total_thanks")
+	if total == 0 {
+		materialThanks, _ := h.store.GetTotalThanks()
+		var packageThanks int64
+		if h.packageStore != nil {
+			packageThanks, _ = h.packageStore.GetTotalThanks()
+		}
+		total = materialThanks + packageThanks
 	}
-	var packageThanks int64
-	if h.packageStore != nil {
-		packageThanks, _ = h.packageStore.GetTotalThanks()
-	}
-	total := materialThanks + packageThanks
 	c.JSON(http.StatusOK, gin.H{
 		"total_thanks": total,
 	})

@@ -15,6 +15,7 @@ export const categoryMeta = {
   past_exam:      { label: '历年真题',  emoji: '📝', tone: 'kapok' },
   study_material: { label: '学习资料',  emoji: '📓', tone: 'camphor' },
   package:        { label: '课程资源包', emoji: '🎁', tone: 'honey' },
+  experience:     { label: '经验攻略',  emoji: '🧭', tone: 'mist' },
 }
 
 const toneClass = {

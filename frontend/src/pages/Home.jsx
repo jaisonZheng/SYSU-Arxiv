@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   Search, Sparkles, ArrowRight, FileText, BookOpen, Package, Clock, Heart,
   Coffee, Sun
 } from 'lucide-react'
-import { api } from '../api/client'
+import { api, isLoggedIn, triggerDownload } from '../api/client'
 import AnimatedCounter from '../components/AnimatedCounter'
 import ResourceCard from '../components/ResourceCard'
 import SectionHeading, { ViewAllLink } from '../components/SectionHeading'
 import Mascot from '../components/Mascot'
+import QuotaModal from '../components/QuotaModal'
 import { EmptyState, LoadingBubble, LoadingShimmer } from '../components/States'
 import {
   greet, timeAgo, formatSize, avatarLetter, avatarColor, categoryMeta,
@@ -18,11 +19,12 @@ const heroTags = [
   { label: '历年真题', emoji: '📝', to: '/past-exams' },
   { label: '学习笔记', emoji: '✍️', to: '/study-materials?sub_category=notes' },
   { label: '完整课程包', emoji: '🎁', to: '/course-packages' },
-  { label: '复习总结', emoji: '🌟', to: '/study-materials?sub_category=summary' },
+  { label: '经验攻略', emoji: '🧭', to: '/experience' },
 ]
 
 export default function Home() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [search, setSearch] = useState('')
   const [packages, setPackages] = useState([])
   const [recentMaterials, setRecentMaterials] = useState([])
@@ -69,7 +71,7 @@ export default function Home() {
         seen.get(name).count += 1
       })
       ;(pkgs?.items || []).forEach((p) => {
-        const name = p.uploader_name || (p.source_type === 'github' ? 'SYSU_Notebook' : 'Jaison')
+        const name = p.uploader_name || 'Jaison'
         if (!seen.has(name)) seen.set(name, { name, count: 0, latest: p.created_at })
         seen.get(name).count += 1
       })
@@ -96,7 +98,7 @@ export default function Home() {
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/80 border border-[--color-line] text-[12.5px] font-medium text-[--color-ink-700] mb-5 backdrop-blur-md">
               <Sun className="w-3.5 h-3.5 text-[--color-honey-500]" />
-              <span className="hidden sm:inline">{hello.hi}，欢迎回到角落</span>
+              <span className="hidden sm:inline">{hello.hi}，欢迎回到破壁计划</span>
               <span className="sm:hidden">{hello.hi}</span>
               <span className="text-[--color-ink-300]">·</span>
               <span className="text-[--color-ink-500]">{hello.sub}</span>
@@ -117,8 +119,7 @@ export default function Home() {
             </h1>
 
             <p className="text-[15.5px] md:text-[16.5px] text-[--color-ink-500] leading-relaxed max-w-xl mb-7">
-              这是<span className="text-[--color-ink-900] font-semibold">中山大学同学之间</span>的资料分享小角落 ——
-              不收一分钱，靠彼此的善意运转。把你手里的好东西，传递给后面的人。
+              这里是中大人的破壁计划：笔记、试卷、资料，本该自由流动。不收一分钱，靠彼此的善意运转。
             </p>
 
             {/* 搜索 */}
@@ -165,14 +166,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 三个分类大卡 ====== */}
+      {/* ====== 四个分类大卡 ====== */}
       <section>
         <SectionHeading
           kicker="想找什么"
-          title="今天来角落里看看？"
+          title="今天来破壁计划看看？"
           hint="按分类挑一个开始 ——  挑到了好的，记得也上传一份。"
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           <CategoryCard
             to="/course-packages"
             tone="honey"
@@ -200,6 +201,15 @@ export default function Home() {
             stat={`${stats.materials} 份资料`}
             count={stats.materials}
           />
+          <CategoryCard
+            to="/experience"
+            tone="mist"
+            kicker="少走弯路"
+            title="经验攻略"
+            desc="转专业、留学、新生、二次遴选等经验分享 🧭"
+            stat="持续更新中"
+            count={0}
+          />
         </div>
       </section>
 
@@ -218,11 +228,11 @@ export default function Home() {
             hint="同学们已经从这里搬走了多少份资料"
             suffix="次"
             tone="honey"
-            pad={6}
+            pad={5}
           />
           <AnimatedCounter
             value={stats.packages + stats.exams + stats.materials}
-            label="角落里现在有"
+            label="破壁计划现在有"
             hint="背后是无数次「我也传一份」"
             suffix="份"
             tone="camphor"
@@ -245,7 +255,7 @@ export default function Home() {
           kicker="今日热门"
           title="同学们最常翻的课程包"
           hint="按下载次数排，越往前越是「考前救命级」"
-          action={<ViewAllLink onClick={() => navigate('/course-packages')}>更多课程包</ViewAllLink>}
+          action={<ViewAllLink onClick={() => navigate('/hot-ranking')}>查看排行榜</ViewAllLink>}
           accent="honey"
         />
         {loading ? (
@@ -259,7 +269,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {packages.slice(0, 8).map((pkg, i) => (
-              <PackageCard key={pkg.id} pkg={pkg} index={i} onClick={() => navigate(`/package/${pkg.id}`)} />
+              <PackageCard key={pkg.id} pkg={pkg} index={i} />
             ))}
           </div>
         )}
@@ -269,7 +279,7 @@ export default function Home() {
       <section>
         <SectionHeading
           kicker="刚刚发生"
-          title="角落里最新的几份心意"
+          title="刚刚破墙而出的几份资料"
           hint="按时间倒序 —— 最上面的是几分钟前刚被放下的 ✨"
           action={<ViewAllLink onClick={() => navigate('/study-materials')}>看更多动态</ViewAllLink>}
           accent="camphor"
@@ -277,7 +287,7 @@ export default function Home() {
         {loading ? (
           <LoadingShimmer rows={3} />
         ) : recentMaterials.length === 0 ? (
-          <EmptyState emoji="🌱" title="角落里还很安静" hint="等待第一份心意 —— 也许是你的笔记？"
+          <EmptyState emoji="🌱" title="墙还没被打破" hint="第一份资料，也许就来自你？"
             action={<button onClick={() => navigate('/upload')} className="btn-primary hover:btn-primary-hover">分享一份</button>}
           />
         ) : (
@@ -296,10 +306,10 @@ export default function Home() {
               <Heart className="w-3.5 h-3.5" /> 致最近的贡献者们
             </p>
             <h2 className="text-[24px] md:text-[28px] font-bold tracking-tight text-[--color-ink-900] leading-tight max-w-xl mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-              这些名字让今天的角落更暖一点
+              这些名字今天拆掉了一堵墙
             </h2>
             <p className="text-[14px] text-[--color-ink-500] mb-6 max-w-xl">
-              没有他们就没有这个角落。下次你也可以在这里。
+              没有他们就没有这个计划。下次你也可以在这里。
             </p>
             <div className="flex items-start gap-3 flex-wrap">
               {contributors.length === 0 ? (
@@ -329,7 +339,7 @@ export default function Home() {
                 onClick={() => navigate('/help')}
                 className="inline-flex items-center gap-2 h-11 px-5 rounded-full text-sm font-medium text-[--color-ink-700] bg-white border border-[--color-line] hover:bg-[--color-cream-100]"
               >
-                了解角落 <ArrowRight className="w-4 h-4" />
+                了解破壁计划 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -346,6 +356,7 @@ function HeroVisual({ hello, packages, contributors }) {
   const featured = packages[0]
   const c1 = contributors[0]
   const c2 = contributors[1]
+  const navigate = useNavigate()
   return (
     <div className="relative h-[340px] md:h-[420px] flex items-center justify-center">
       {/* 橘猫主体 - 占据右侧整块 */}
@@ -360,7 +371,11 @@ function HeroVisual({ hello, packages, contributors }) {
 
       {/* 浮卡 1：今日推荐 */}
       {featured && (
-        <div className="absolute top-2 left-0 md:left-[-14px] bg-white rounded-2xl shadow-[var(--shadow)] border border-[--color-line] p-3 pr-4 max-w-[230px] animate-float" style={{ animationDelay: '0.4s' }}>
+        <button
+          onClick={() => navigate(`/package/${featured.id}`)}
+          className="absolute top-2 left-0 md:left-[-14px] bg-white rounded-2xl shadow-[var(--shadow)] border border-[--color-line] p-3 pr-4 max-w-[230px] animate-float text-left hover:shadow-[var(--shadow-lg)] hover:-translate-y-0.5 transition-all"
+          style={{ animationDelay: '0.4s' }}
+        >
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[--color-honey-200] to-[--color-honey-300] grid place-items-center text-lg shrink-0">🎁</div>
             <div className="min-w-0">
@@ -368,7 +383,7 @@ function HeroVisual({ hello, packages, contributors }) {
               <p className="text-[13px] font-semibold text-[--color-ink-900] truncate" title={featured.title}>{featured.course_name || featured.title}</p>
             </div>
           </div>
-        </div>
+        </button>
       )}
 
       {/* 浮卡 2：贡献者（桌面端显示，手机端隐藏避免遮挡） */}
@@ -396,13 +411,14 @@ function HeroVisual({ hello, packages, contributors }) {
   )
 }
 
-/* 三个分类大卡 */
+/* 四个分类大卡 */
 function CategoryCard({ to, tone, kicker, title, desc, stat }) {
   const navigate = useNavigate()
   const palettes = {
     honey:   { bg: 'from-[#FFF6EC] to-[#FFE6CB]', dot: 'bg-[--color-honey-400]', kicker: 'text-[--color-honey-700]', emoji: '🎁' },
     kapok:   { bg: 'from-[#FFEFE9] to-[#FFD5C7]', dot: 'bg-[--color-kapok-400]', kicker: 'text-[--color-kapok-500]', emoji: '📝' },
     camphor: { bg: 'from-[#EEF6F0] to-[#D6E9DA]', dot: 'bg-[--color-camphor-500]', kicker: 'text-[--color-camphor-700]', emoji: '✍️' },
+    mist:    { bg: 'from-[#EEF3F8] to-[#D4E0EC]', dot: 'bg-[--color-mist-400]', kicker: 'text-[--color-mist-500]', emoji: '🧭' },
   }
   const p = palettes[tone] || palettes.honey
   return (
@@ -414,8 +430,7 @@ function CategoryCard({ to, tone, kicker, title, desc, stat }) {
         {p.emoji}
       </div>
       <div className="relative">
-        <div className="flex items-center gap-2 mb-2">
-          <span className={`w-1.5 h-1.5 rounded-full ${p.dot}`} />
+        <div className="mb-2">
           <span className={`text-[11px] uppercase tracking-[0.22em] font-semibold ${p.kicker}`}>{kicker}</span>
         </div>
         <h3 className="text-[22px] font-bold tracking-tight text-[--color-ink-900] mb-2" style={{ fontFamily: 'var(--font-display)' }}>{title}</h3>
@@ -432,7 +447,11 @@ function CategoryCard({ to, tone, kicker, title, desc, stat }) {
 }
 
 /* 单个 课程包 卡片 */
-function PackageCard({ pkg, index, onClick }) {
+function PackageCard({ pkg, index }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [showQuotaModal, setShowQuotaModal] = useState(false)
+
   const tones = ['honey', 'camphor', 'kapok', 'mist']
   const tone = tones[index % tones.length]
   const p = {
@@ -441,27 +460,73 @@ function PackageCard({ pkg, index, onClick }) {
     kapok:   { bg: 'from-[#FFEFE9] to-[#FFD5C7]', emoji: '🌺', accent: 'text-[--color-kapok-500]' },
     mist:    { bg: 'from-[#EEF3F8] to-[#D4E0EC]', emoji: '🪶', accent: 'text-[--color-mist-500]' },
   }[tone]
+
+  const handleCardClick = () => {
+    navigate(`/package/${pkg.id}`)
+  }
+
+  const handleDownload = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (!isLoggedIn()) {
+      navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
+      return
+    }
+
+    try {
+      const quota = await api.getMyQuota()
+      if (quota.remaining <= 0) {
+        setShowQuotaModal(true)
+        return
+      }
+      const url = api.downloadPackage(pkg.id)
+      triggerDownload(url, pkg.file_name)
+    } catch (err) {
+      if (err.status === 401 || err.message === 'unauthorized') {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
+      } else {
+        console.error(err)
+      }
+    }
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${p.bg} p-5 text-left shadow-[var(--shadow-sm)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]`}
-    >
-      <div className="absolute -top-3 -right-3 text-[64px] opacity-20 group-hover:scale-110 transition-transform duration-500">{p.emoji}</div>
-      <div className="relative">
-        <p className={`text-[10.5px] uppercase tracking-[0.18em] font-semibold ${p.accent} mb-1`}>课程包 · {pkg.source_type === 'github' ? 'GitHub' : pkg.source_type === 'lanzou' ? '蓝奏云' : '社区'}</p>
-        <h3 className="text-[16px] font-bold text-[--color-ink-900] line-clamp-2 leading-snug mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-          {pkg.course_name || pkg.title}
-        </h3>
-        <p className="text-[12.5px] text-[--color-ink-500] line-clamp-2 leading-relaxed mb-4">{pkg.description || '这门课的全套资料，挑你需要的'}</p>
-        <div className="flex items-center justify-between text-[12px] text-[--color-ink-700]">
-          <span className="inline-flex items-center gap-1">
-            <Package className="w-3.5 h-3.5" /> {pkg.total_files || '?'} 个文件
-          </span>
-          <span className="inline-flex items-center gap-1 font-semibold">
-            收下 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-          </span>
+    <>
+      <button
+        onClick={handleCardClick}
+        className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${p.bg} p-5 text-left shadow-[var(--shadow-sm)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]`}
+      >
+        <div className="absolute -top-3 -right-3 text-[64px] opacity-20 group-hover:scale-110 transition-transform duration-500">{p.emoji}</div>
+        <div className="relative">
+          <p className={`text-[10.5px] uppercase tracking-[0.18em] font-semibold ${p.accent} mb-1`}>课程包 · {pkg.source_type === 'github' ? 'GitHub' : pkg.source_type === 'lanzou' ? '蓝奏云' : '社区'}</p>
+          <h3 className="text-[16px] font-bold text-[--color-ink-900] line-clamp-2 leading-snug mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            {pkg.course_name || pkg.title}
+          </h3>
+          <p className="text-[12.5px] text-[--color-ink-500] line-clamp-2 leading-relaxed mb-4">{pkg.description || '这门课的全套资料，挑你需要的'}</p>
+          <div className="flex items-center justify-between text-[12px] text-[--color-ink-700]">
+            <span className="inline-flex items-center gap-1">
+              <Package className="w-3.5 h-3.5" /> {pkg.total_files || '?'} 个文件
+            </span>
+            <span
+              role="button"
+              onClick={handleDownload}
+              className="inline-flex items-center gap-1 font-semibold hover:gap-1.5 transition-all cursor-pointer"
+            >
+              收下 <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+
+      {showQuotaModal && (
+        <QuotaModal
+          onClose={() => setShowQuotaModal(false)}
+          onNavigateUpload={() => navigate('/upload')}
+        />
+      )}
+    </>
   )
 }

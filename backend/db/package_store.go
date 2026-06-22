@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -15,9 +16,9 @@ func NewPackageStore() *PackageStore {
 
 func (s *PackageStore) Create(p *models.CoursePackage) (int64, error) {
 	result, err := DB.Exec(`
-		INSERT INTO course_packages (title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		p.Title, p.Description, p.CourseName, p.Department, p.SourceType, p.SourceName, p.FileName, p.FilePath, p.FileSize, p.TotalFiles,
+		INSERT INTO course_packages (title, description, course_name, department, source_type, source_name, uploader_name, file_name, file_path, file_size, total_files)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.Title, p.Description, p.CourseName, p.Department, p.SourceType, p.SourceName, p.UploaderName, p.FileName, p.FilePath, p.FileSize, p.TotalFiles,
 	)
 	if err != nil {
 		return 0, err
@@ -28,9 +29,9 @@ func (s *PackageStore) Create(p *models.CoursePackage) (int64, error) {
 func (s *PackageStore) GetByID(id int64) (*models.CoursePackage, error) {
 	p := &models.CoursePackage{}
 	err := DB.QueryRow(`
-		SELECT id, title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files, download_count, thanks_count, created_at, updated_at
+		SELECT id, title, description, course_name, department, source_type, source_name, uploader_name, file_name, file_path, file_size, total_files, download_count, thanks_count, created_at, updated_at
 		FROM course_packages WHERE id = ?`, id,
-	).Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.ThanksCount, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.UploaderName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.ThanksCount, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +87,7 @@ func (s *PackageStore) List(filter *models.CoursePackageFilter) ([]models.Course
 	offset := (page - 1) * pageSize
 
 	query := fmt.Sprintf(`
-		SELECT id, title, description, course_name, department, source_type, source_name, file_name, file_path, file_size, total_files, download_count, thanks_count, created_at, updated_at
+		SELECT id, title, description, course_name, department, source_type, source_name, uploader_name, file_name, file_path, file_size, total_files, download_count, thanks_count, created_at, updated_at
 		FROM course_packages
 		WHERE %s
 		ORDER BY %s %s
@@ -102,7 +103,7 @@ func (s *PackageStore) List(filter *models.CoursePackageFilter) ([]models.Course
 	items := []models.CoursePackage{}
 	for rows.Next() {
 		p := models.CoursePackage{}
-		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.ThanksCount, &p.CreatedAt, &p.UpdatedAt)
+		err := rows.Scan(&p.ID, &p.Title, &p.Description, &p.CourseName, &p.Department, &p.SourceType, &p.SourceName, &p.UploaderName, &p.FileName, &p.FilePath, &p.FileSize, &p.TotalFiles, &p.DownloadCount, &p.ThanksCount, &p.CreatedAt, &p.UpdatedAt)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -124,9 +125,13 @@ func (s *PackageStore) GetItems(packageID int64) ([]models.PackageItem, error) {
 	items := []models.PackageItem{}
 	for rows.Next() {
 		item := models.PackageItem{}
-		err := rows.Scan(&item.ID, &item.PackageID, &item.Path, &item.FileName, &item.FileSize, &item.FileType, &item.MimeType)
+		var mimeType sql.NullString
+		err := rows.Scan(&item.ID, &item.PackageID, &item.Path, &item.FileName, &item.FileSize, &item.FileType, &mimeType)
 		if err != nil {
 			return nil, err
+		}
+		if mimeType.Valid {
+			item.MimeType = mimeType.String
 		}
 		items = append(items, item)
 	}

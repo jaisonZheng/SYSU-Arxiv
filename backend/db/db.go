@@ -97,6 +97,54 @@ func runMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_packages_course ON course_packages(course_name)`,
 		`CREATE INDEX IF NOT EXISTS idx_packages_source ON course_packages(source_type)`,
 		`CREATE INDEX IF NOT EXISTS idx_package_items_package ON package_items(package_id)`,
+		// Phase 3+4: user auth, quota, invite tables
+		`CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			email TEXT NOT NULL UNIQUE,
+			nickname TEXT,
+			password_hash TEXT,
+			invite_code TEXT UNIQUE,
+			avatar_url TEXT,
+			invited_by INTEGER,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS download_quota (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			week_start DATETIME NOT NULL,
+			total_quota INTEGER DEFAULT 3,
+			used_quota INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(user_id, week_start)
+		)`,
+		`CREATE TABLE IF NOT EXISTS download_records (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			resource_id INTEGER NOT NULL,
+			resource_type TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS upload_records (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			resource_id INTEGER NOT NULL,
+			resource_type TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS email_verifications (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			email TEXT NOT NULL,
+			code TEXT NOT NULL,
+			expires_at DATETIME NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`,
+		`CREATE INDEX IF NOT EXISTS idx_users_invite_code ON users(invite_code)`,
+		`CREATE INDEX IF NOT EXISTS idx_quota_user_week ON download_quota(user_id, week_start)`,
+		`CREATE INDEX IF NOT EXISTS idx_download_records_user ON download_records(user_id, created_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_upload_records_user ON upload_records(user_id, created_at)`,
 	}
 
 	for i, m := range migrations {
@@ -111,6 +159,23 @@ func runMigrations(db *sql.DB) error {
 	}
 	if err := addColumnIfNotExists(db, "course_packages", "thanks_count", "INTEGER DEFAULT 0"); err != nil {
 		return fmt.Errorf("failed to add thanks_count to course_packages: %w", err)
+	}
+	if err := addColumnIfNotExists(db, "course_packages", "uploader_name", "TEXT"); err != nil {
+		return fmt.Errorf("failed to add uploader_name to course_packages: %w", err)
+	}
+	if err := addColumnIfNotExists(db, "materials", "uploader_id", "INTEGER"); err != nil {
+		return fmt.Errorf("failed to add uploader_id to materials: %w", err)
+	}
+	if err := addColumnIfNotExists(db, "course_packages", "uploader_id", "INTEGER"); err != nil {
+		return fmt.Errorf("failed to add uploader_id to course_packages: %w", err)
+	}
+
+	// site_stats for persistent global counters
+	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS site_stats (
+		key TEXT PRIMARY KEY,
+		value INTEGER DEFAULT 0
+	)`); err != nil {
+		return fmt.Errorf("failed to create site_stats: %w", err)
 	}
 
 	return nil
@@ -132,4 +197,20 @@ func addColumnIfNotExists(db *sql.DB, table, column, def string) error {
 		}
 	}
 	return nil
+}
+
+func GetSiteStat(key string) int64 {
+	var val int64
+	DB.QueryRow("SELECT value FROM site_stats WHERE key = ?", key).Scan(&val)
+	return val
+}
+
+func IncrementSiteStat(key string) error {
+	_, err := DB.Exec(`INSERT INTO site_stats (key, value) VALUES (?, 1) ON CONFLICT(key) DO UPDATE SET value = value + 1`, key)
+	return err
+}
+
+func SetSiteStat(key string, value int64) error {
+	_, err := DB.Exec(`INSERT INTO site_stats (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = ?`, key, value, value)
+	return err
 }
