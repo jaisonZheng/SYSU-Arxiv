@@ -71,12 +71,18 @@ export default function ResourceCard({ material }) {
 
   return (
     <>
-      <Link
-        to={`/material/${material.id}`}
-        className="group relative bg-white rounded-3xl p-4 md:p-5 shadow-[var(--shadow-xs)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow)] flex gap-4"
+      <div
+        className="group relative bg-white rounded-3xl p-4 md:p-5 shadow-[var(--shadow-xs)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow)] flex gap-4 focus-within:ring-2 focus-within:ring-[--color-camphor-300]"
       >
+        <Link
+          to={`/material/${material.id}`}
+          aria-label={material.title}
+          title={material.title}
+          className="absolute inset-0 z-0 rounded-3xl focus:outline-none"
+        />
+
         {/* 左：文件视觉 */}
-        <div className="shrink-0 w-[88px] md:w-[112px]">
+        <div className="relative z-10 shrink-0 w-[88px] md:w-[112px] pointer-events-none">
           <div className={`relative h-[110px] md:h-[126px] rounded-2xl bg-gradient-to-br ${toneCard[file.tone]} grid place-items-center overflow-hidden`}>
             <span className="text-[44px] md:text-[52px] drop-shadow-sm group-hover:scale-110 transition-transform duration-500">{file.emoji}</span>
             {material.file_type && (
@@ -88,7 +94,7 @@ export default function ResourceCard({ material }) {
         </div>
 
         {/* 右：内容 */}
-        <div className="flex-1 min-w-0 flex flex-col">
+        <div className="relative z-10 flex-1 min-w-0 flex flex-col pointer-events-none">
           <div className="flex items-start gap-1.5 flex-wrap mb-1.5">
             <span className="chip bg-[--color-camphor-50] text-[--color-camphor-700] border border-[--color-camphor-100]">
               {cat.emoji} {cat.label}
@@ -114,7 +120,7 @@ export default function ResourceCard({ material }) {
           </p>
 
           <div className="flex-1" />
-          <div className="mt-2 pt-2 border-t border-dashed border-[--color-line] flex items-center justify-between gap-2">
+          <div className="pointer-events-auto mt-2 pt-2 border-t border-dashed border-[--color-line] flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
               <span
                 className="w-6 h-6 rounded-full grid place-items-center text-[11px] font-bold shrink-0"
@@ -134,6 +140,7 @@ export default function ResourceCard({ material }) {
                 {material.download_count || 0}
               </span>
               <button
+                type="button"
                 onClick={handleDownload}
                 className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-[--color-camphor-50] hover:bg-[--color-camphor-100] text-[--color-camphor-700] text-[11.5px] font-semibold transition-colors"
               >
@@ -142,7 +149,7 @@ export default function ResourceCard({ material }) {
             </div>
           </div>
         </div>
-      </Link>
+      </div>
 
       {showQuotaModal && (
         <QuotaModal

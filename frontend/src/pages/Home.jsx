@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import {
   Search, Sparkles, ArrowRight, FileText, BookOpen, Package, Clock, Heart,
   Coffee, Sun
@@ -461,10 +461,6 @@ function PackageCard({ pkg, index }) {
     mist:    { bg: 'from-[#EEF3F8] to-[#D4E0EC]', emoji: '🪶', accent: 'text-[--color-mist-500]' },
   }[tone]
 
-  const handleCardClick = () => {
-    navigate(`/package/${pkg.id}`)
-  }
-
   const handleDownload = async (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -493,14 +489,21 @@ function PackageCard({ pkg, index }) {
     }
   }
 
+  const cardLabel = pkg.course_name || pkg.title || '课程包'
+
   return (
     <>
-      <button
-        onClick={handleCardClick}
+      <div
         className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${p.bg} p-5 text-left shadow-[var(--shadow-sm)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)]`}
       >
-        <div className="absolute -top-3 -right-3 text-[64px] opacity-20 group-hover:scale-110 transition-transform duration-500">{p.emoji}</div>
-        <div className="relative">
+        <Link
+          to={`/package/${pkg.id}`}
+          aria-label={cardLabel}
+          title={cardLabel}
+          className="absolute inset-0 z-0 rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-camphor-300]"
+        />
+        <div className="absolute -top-3 -right-3 text-[64px] opacity-20 group-hover:scale-110 transition-transform duration-500 pointer-events-none">{p.emoji}</div>
+        <div className="relative z-10 pointer-events-none">
           <p className={`text-[10.5px] uppercase tracking-[0.18em] font-semibold ${p.accent} mb-1`}>课程包 · {pkg.source_type === 'github' ? 'GitHub' : pkg.source_type === 'lanzou' ? '蓝奏云' : '社区'}</p>
           <h3 className="text-[16px] font-bold text-[--color-ink-900] line-clamp-2 leading-snug mb-2" style={{ fontFamily: 'var(--font-display)' }}>
             {pkg.course_name || pkg.title}
@@ -510,16 +513,16 @@ function PackageCard({ pkg, index }) {
             <span className="inline-flex items-center gap-1">
               <Package className="w-3.5 h-3.5" /> {pkg.total_files || '?'} 个文件
             </span>
-            <span
-              role="button"
+            <button
+              type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-1 font-semibold hover:gap-1.5 transition-all cursor-pointer"
+              className="pointer-events-auto inline-flex items-center gap-1 font-semibold hover:gap-1.5 transition-all"
             >
               收下 <ArrowRight className="w-3.5 h-3.5" />
-            </span>
+            </button>
           </div>
         </div>
-      </button>
+      </div>
 
       {showQuotaModal && (
         <QuotaModal

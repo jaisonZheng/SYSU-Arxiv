@@ -243,8 +243,8 @@ export default function Profile() {
 
   const ava = user.nickname ? avatarColor(user.nickname) : avatarColor(user.email || 'U')
   const initial = avatarLetter(user.nickname || user.email || 'U')
-  const used = quota?.used || 0
-  const total = quota?.total || 3
+  const used = quota?.used_quota || 0
+  const total = quota?.total_quota || 3
   const remaining = quota?.remaining ?? (total - used)
   const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0
 
@@ -415,9 +415,9 @@ export default function Profile() {
           ) : (
             <div className="divide-y divide-[--color-line-soft]">
               {downloads.map((item, i) => {
-                const isPackage = item.package_id != null
-                const id = isPackage ? item.package_id : item.material_id
-                const title = item.title || item.file_name || '未命名资料'
+                const isPackage = item.resource_type === 'package'
+                const id = item.resource_id
+                const title = item.resource_title || item.file_name || '未命名资料'
                 return (
                   <Link
                     key={i}
@@ -456,9 +456,9 @@ export default function Profile() {
           ) : (
             <div className="divide-y divide-[--color-line-soft]">
               {uploads.map((item, i) => {
-                const isPackage = item.package_id != null
-                const id = isPackage ? item.package_id : item.material_id
-                const title = item.title || item.file_name || '未命名资料'
+                const isPackage = item.resource_type === 'package'
+                const id = item.resource_id
+                const title = item.resource_title || item.file_name || '未命名资料'
                 return (
                   <Link
                     key={i}

@@ -30,7 +30,7 @@ export default function TopNav() {
 
   useEffect(() => { setOpenMobile(false) }, [location.pathname])
 
-  // Load user info on mount if token exists
+  // Load user info whenever route changes if token exists
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -55,7 +55,7 @@ export default function TopNav() {
         localStorage.removeItem('user')
         setUser(null)
       })
-  }, [])
+  }, [location.pathname])
 
   const handleSearch = (e) => {
     e.preventDefault()
