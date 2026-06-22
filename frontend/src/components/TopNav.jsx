@@ -113,7 +113,7 @@ export default function TopNav() {
         </nav>
 
         {/* Search (desktop) */}
-        <form onSubmit={handleSearch} className="hidden lg:flex relative items-center flex-1 max-w-[280px] ml-2">
+        <form onSubmit={handleSearch} className="hidden lg:flex relative items-center flex-1 max-w-[420px] ml-2">
           <Search className="absolute left-3.5 w-4 h-4 text-[--color-ink-400] pointer-events-none" />
           <input
             type="text"
@@ -123,8 +123,6 @@ export default function TopNav() {
             className="w-full h-9 pl-10 pr-3 bg-[--color-cream-100] border border-transparent rounded-full text-[13.5px] placeholder-[--color-ink-400] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
           />
         </form>
-
-        <div className="flex-1" />
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
