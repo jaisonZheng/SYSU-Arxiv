@@ -79,7 +79,7 @@ export default function CoursePackages() {
   }
 
   return (
-    <div className="flex flex-col gap-8 md:gap-10 animate-fade-up">
+    <div className="flex flex-col gap-8 md:gap-10">
       {/* ============== Hero ============== */}
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#FFF6EC] to-[#FFE6CB] px-6 md:px-9 py-7 md:py-9">
         <div className="absolute -top-10 -right-8 text-[180px] opacity-15 select-none pointer-events-none rotate-[6deg]">🎁</div>

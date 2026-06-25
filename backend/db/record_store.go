@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 
 	"sysu-arxiv/models"
 )
@@ -128,4 +129,43 @@ func (s *RecordStore) ListUploadsByUserWithResource(userID int64) ([]models.Uplo
 		records = append(records, r)
 	}
 	return records, nil
+}
+
+type DailyTrend struct {
+	Date          string `json:"date"`
+	Registrations int64  `json:"registrations"`
+	Downloads     int64  `json:"downloads"`
+	Uploads       int64  `json:"uploads"`
+}
+
+func (s *RecordStore) GetDailyTrends(days int) ([]DailyTrend, error) {
+	rows, err := DB.Query(`
+		WITH RECURSIVE dates(date) AS (
+			SELECT date('now', ?)
+			UNION ALL
+			SELECT date(date, '+1 day')
+			FROM dates
+			WHERE date < date('now')
+		)
+		SELECT
+			d.date,
+			COALESCE((SELECT COUNT(*) FROM users WHERE date(created_at) = d.date), 0) as registrations,
+			COALESCE((SELECT COUNT(*) FROM download_records WHERE date(created_at) = d.date), 0) as downloads,
+			COALESCE((SELECT COUNT(*) FROM upload_records WHERE date(created_at) = d.date), 0) as uploads
+		FROM dates d
+		ORDER BY d.date`, fmt.Sprintf("-%d days", days))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := []DailyTrend{}
+	for rows.Next() {
+		var t DailyTrend
+		if err := rows.Scan(&t.Date, &t.Registrations, &t.Downloads, &t.Uploads); err != nil {
+			return nil, err
+		}
+		result = append(result, t)
+	}
+	return result, nil
 }

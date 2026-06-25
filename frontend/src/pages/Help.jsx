@@ -67,7 +67,7 @@ const tonePalettes = {
 export default function Help() {
   const navigate = useNavigate()
   return (
-    <div className="flex flex-col gap-8 md:gap-10 max-w-[840px] mx-auto animate-fade-up">
+    <div className="flex flex-col gap-8 md:gap-10 max-w-[840px] mx-auto">
       {/* ============== Hero ============== */}
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[--color-cream-100] via-white to-[--color-camphor-50] px-6 md:px-9 py-8 md:py-10">
         <div className="absolute -top-10 -right-8 text-[180px] opacity-15 select-none pointer-events-none animate-float">🌱</div>
@@ -130,7 +130,7 @@ export default function Help() {
               <a
                 href="https://github.com/jaisonZheng/SYSU-Arxiv.git"
                 target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-[--color-ink-900] hover:bg-[--color-ink-700] text-white text-[13px] font-semibold transition-colors"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-full bg-white border border-[--color-line] text-[--color-ink-700] text-[13px] font-medium hover:bg-[--color-cream-100] transition-colors"
               >
                 <Github className="w-4 h-4" /> 去看 GitHub
               </a>

@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"sysu-arxiv/db"
@@ -18,10 +20,11 @@ import (
 )
 
 type PackageHandler struct {
-	store       *db.PackageStore
-	quotaStore  *db.QuotaStore
-	recordStore *db.RecordStore
-	storage     *storage.LocalStorage
+	store        *db.PackageStore
+	quotaStore   *db.QuotaStore
+	recordStore  *db.RecordStore
+	storage      *storage.LocalStorage
+	cacheStorage *storage.LocalStorage
 }
 
 func NewPackageHandler(store *db.PackageStore, storage *storage.LocalStorage) *PackageHandler {
@@ -34,6 +37,10 @@ func (h *PackageHandler) SetQuotaStore(qs *db.QuotaStore) {
 
 func (h *PackageHandler) SetRecordStore(rs *db.RecordStore) {
 	h.recordStore = rs
+}
+
+func (h *PackageHandler) SetCacheStorage(cs *storage.LocalStorage) {
+	h.cacheStorage = cs
 }
 
 func (h *PackageHandler) RegisterRoutes(r *gin.Engine) {
@@ -50,8 +57,14 @@ func (h *PackageHandler) RegisterRoutes(r *gin.Engine) {
 	auth := r.Group("/api")
 	auth.Use(middleware.AuthRequired())
 	{
-		auth.POST("/packages", h.CreatePackage)
 		auth.GET("/packages/:id/download", h.DownloadPackage)
+	}
+
+	// Upload can be anonymous
+	upload := r.Group("/api")
+	upload.Use(middleware.AuthOptional())
+	{
+		upload.POST("/packages", h.CreatePackage)
 	}
 }
 
@@ -283,15 +296,34 @@ func (h *PackageHandler) GetPackageCourses(c *gin.Context) {
 
 func (h *PackageHandler) CreatePackage(c *gin.Context) {
 	userID := c.GetInt64("userID")
+	validUploader := userID > 0
 
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请选择要上传的文件"})
+	filePath := c.PostForm("file_path")
+	if filePath == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file_path required"})
 		return
 	}
-	defer file.Close()
 
-	fileName := header.Filename
+	if !strings.HasPrefix(filePath, "cache/") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file_path"})
+		return
+	}
+
+	if h.cacheStorage == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cache storage not available"})
+		return
+	}
+
+	absSrc := h.cacheStorage.ResolvePath(filePath)
+	if _, err := os.Stat(absSrc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cached file not found"})
+		return
+	}
+
+	fileName := c.PostForm("file_name")
+	if fileName == "" {
+		fileName = filepath.Base(absSrc)
+	}
 	fileExt := strings.ToLower(filepath.Ext(fileName))
 
 	if fileExt != ".zip" {
@@ -299,16 +331,55 @@ func (h *PackageHandler) CreatePackage(c *gin.Context) {
 		return
 	}
 
-	filePath, fileSize, err := h.storage.SaveFile(file, header, "packages")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存文件失败: " + err.Error()})
+	// Move cached file to packages directory
+	timestamp := time.Now().UnixNano()
+	dstFilename := fmt.Sprintf("%d_%s", timestamp, fileName)
+	dstDir := filepath.Join(h.storage.BasePath, "packages")
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create packages dir: " + err.Error()})
 		return
+	}
+	absDst := filepath.Join(dstDir, dstFilename)
+
+	if err := os.Rename(absSrc, absDst); err != nil {
+		// Fallback copy+delete
+		srcFile, err := os.Open(absSrc)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to open cached file: " + err.Error()})
+			return
+		}
+		defer srcFile.Close()
+		dstFile, err := os.Create(absDst)
+		if err != nil {
+			srcFile.Close()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create package file: " + err.Error()})
+			return
+		}
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			dstFile.Close()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to copy file: " + err.Error()})
+			return
+		}
+		if err := dstFile.Close(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to close package file: " + err.Error()})
+			return
+		}
+		if err := os.Remove(absSrc); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to remove cached file: " + err.Error()})
+			return
+		}
+	}
+
+	finalPath := "packages/" + dstFilename
+	fileSize := int64(0)
+	if info, err := os.Stat(absDst); err == nil {
+		fileSize = info.Size()
 	}
 
 	// Parse zip to count files and create items
-	zr, err := zip.OpenReader(h.storage.ResolvePath(filePath))
+	zr, err := zip.OpenReader(absDst)
 	if err != nil {
-		h.storage.DeleteFile(filePath)
+		os.Remove(absDst)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法打开 ZIP 文件: " + err.Error()})
 		return
 	}
@@ -337,9 +408,9 @@ func (h *PackageHandler) CreatePackage(c *gin.Context) {
 		Description:  c.PostForm("description"),
 		CourseName:   c.PostForm("course_name"),
 		SourceType:   "user_upload",
-		UploaderID:   sql.NullInt64{Int64: userID, Valid: true},
+		UploaderID:   sql.NullInt64{Int64: userID, Valid: validUploader},
 		FileName:     fileName,
-		FilePath:     filePath,
+		FilePath:     finalPath,
 		FileSize:     fileSize,
 		TotalFiles:   totalFiles,
 	}
@@ -362,7 +433,7 @@ func (h *PackageHandler) CreatePackage(c *gin.Context) {
 
 	id, err := h.store.Create(p)
 	if err != nil {
-		h.storage.DeleteFile(filePath)
+		os.Remove(absDst)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建资源包记录失败: " + err.Error()})
 		return
 	}
@@ -376,12 +447,12 @@ func (h *PackageHandler) CreatePackage(c *gin.Context) {
 	}
 
 	// Record upload
-	if h.recordStore != nil {
+	if validUploader && h.recordStore != nil {
 		h.recordStore.CreateUploadRecord(userID, id, "package")
 	}
 
 	// Add bonus quota (+3) for upload
-	if h.quotaStore != nil {
+	if validUploader && h.quotaStore != nil {
 		user, _ := db.NewUserStore().GetByID(userID)
 		if user != nil {
 			weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)

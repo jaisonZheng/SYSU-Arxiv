@@ -65,6 +65,13 @@ export function formatSize(bytes) {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
+export function formatSpeed(bps) {
+  if (!bps || bps <= 0) return ''
+  if (bps < 1024) return `${bps.toFixed(0)} B/s`
+  if (bps < 1024 * 1024) return `${(bps / 1024).toFixed(1)} KB/s`
+  return `${(bps / (1024 * 1024)).toFixed(1)} MB/s`
+}
+
 // 暖色系的随机鼓励语，用于空状态、加载中
 const cheers = {
   loading: ['翻找笔记中…', '从书架里抽取…', '正在拾取 ✨', '稍等，资料在路上…'],

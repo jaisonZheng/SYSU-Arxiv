@@ -7,9 +7,11 @@ import Detail from './pages/Detail'
 import Upload from './pages/Upload'
 import Help from './pages/Help'
 import Experience from './pages/Experience'
+import Search from './pages/Search'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import HotRanking from './pages/HotRanking'
+import Monitor from './pages/Monitor'
 
 function App() {
   return (
@@ -25,8 +27,10 @@ function App() {
         <Route path="upload" element={<Upload />} />
         <Route path="help" element={<Help />} />
         <Route path="hot-ranking" element={<HotRanking />} />
+        <Route path="search" element={<Search />} />
         <Route path="login" element={<Login />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="monitor" element={<Monitor />} />
       </Route>
     </Routes>
   )

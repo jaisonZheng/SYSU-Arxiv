@@ -31,7 +31,7 @@ export default function HotRanking() {
   }, [])
 
   return (
-    <div className="flex flex-col gap-8 md:gap-10 animate-fade-up">
+    <div className="flex flex-col gap-8 md:gap-10">
       {/* 面包屑 */}
       <nav className="flex items-center gap-2 text-[12.5px] text-[--color-ink-500]">
         <button onClick={() => navigate('/')} className="hover:text-[--color-camphor-700] transition-colors">首页</button>

@@ -145,6 +145,16 @@ func runMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_quota_user_week ON download_quota(user_id, week_start)`,
 		`CREATE INDEX IF NOT EXISTS idx_download_records_user ON download_records(user_id, created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_upload_records_user ON upload_records(user_id, created_at)`,
+		// Admin monitor: search logs
+		`CREATE TABLE IF NOT EXISTS search_logs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			query TEXT NOT NULL,
+			result_count INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_search_logs_query ON search_logs(query)`,
+		`CREATE INDEX IF NOT EXISTS idx_search_logs_created_at ON search_logs(created_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_search_logs_result_count ON search_logs(result_count)`,
 	}
 
 	for i, m := range migrations {

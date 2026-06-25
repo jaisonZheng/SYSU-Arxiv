@@ -1,11 +1,12 @@
-import { useState, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
   UploadCloud, File as FileIcon, X, AlertTriangle, CheckCircle, Sparkles,
-  ArrowLeft, Heart, FileText, Package,
+  ArrowLeft, Heart, FileText, Package, Mail,
 } from 'lucide-react'
-import { api } from '../api/client'
-import { formatSize, cheer } from '../lib/format'
+import { api, API_BASE } from '../api/client'
+import { formatSize, formatSpeed, cheer } from '../lib/format'
 
 const categories = [
   { value: 'past_exam',      label: '历年真题',   emoji: '📝', desc: '期末/期中卷子、模拟题',   tone: 'kapok' },
@@ -28,24 +29,57 @@ const subCategories = [
 const allowedExt = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.txt', '.md', '.jpg', '.jpeg', '.png', '.zip', '.rar', '.7z']
 const MAX_SIZE = 200 * 1024 * 1024;
 
+const initialForm = {
+  title: '', description: '',
+  category: '', sub_category: '',
+  department: '', major: '',
+  course_name: '', instructor: '',
+  year: '', file_type: '', uploader_name: '',
+}
+
+function mimeTypeForFile(file) {
+  if (file.type) return file.type
+  const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase()
+  switch (ext) {
+    case '.pdf': return 'application/pdf'
+    case '.doc': return 'application/msword'
+    case '.docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    case '.ppt': return 'application/vnd.ms-powerpoint'
+    case '.pptx': return 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    case '.xls': return 'application/vnd.ms-excel'
+    case '.xlsx': return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    case '.txt': return 'text/plain'
+    case '.md': return 'text/markdown'
+    case '.jpg': case '.jpeg': return 'image/jpeg'
+    case '.png': return 'image/png'
+    case '.zip': return 'application/zip'
+    case '.rar': return 'application/vnd.rar'
+    case '.7z': return 'application/x-7z-compressed'
+    default: return 'application/octet-stream'
+  }
+}
+
 export default function UploadPage() {
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
+  const nextIdRef = useRef(1)
+  const filesRef = useRef([])
+  const uploadingIdsRef = useRef(new Set())
   const [files, setFiles] = useState([])
-  const [form, setForm] = useState({
-    title: '', description: '',
-    category: '', sub_category: '',
-    department: '', major: '',
-    course_name: '', instructor: '',
-    year: '', file_type: '', uploader_name: '',
-  })
-  const [uploading, setUploading] = useState(false)
+  const [form, setForm] = useState(initialForm)
   const [duplicateInfo, setDuplicateInfo] = useState(null)
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false)
+  const [showThanksModal, setShowThanksModal] = useState(false)
+  const [showSingleFileModal, setShowSingleFileModal] = useState(false)
   const [uploadResult, setUploadResult] = useState(null)
   const [dragOver, setDragOver] = useState(false)
 
-  const totalSize = useMemo(() => files.reduce((s, f) => s + (f.size || 0), 0), [files])
+  filesRef.current = files
+
+  const totalSize = useMemo(() => files.reduce((s, f) => s + (f.file.size || 0), 0), [files])
+  const isUploading = useMemo(() => files.some(f => f.status === 'uploading'), [files])
+  const allDone = useMemo(() => files.length > 0 && files.every(f => f.status === 'done'), [files])
 
   /* ----------------- 文件操作 ----------------- */
   const handleDragOver = useCallback((e) => { e.preventDefault(); setDragOver(true) }, [])
@@ -55,8 +89,23 @@ export default function UploadPage() {
     addFiles(Array.from(e.dataTransfer.files))
   }, [])
 
+  const makeFileItem = (file) => ({
+    id: nextIdRef.current++,
+    file,
+    filePath: null,
+    status: 'pending',
+    progress: 0,
+    speed: '',
+    error: '',
+  })
+
   const addFiles = (newFiles) => {
-    const isPackage = form.category === 'package'
+    if (filesRef.current.length > 0 || newFiles.length > 1) {
+      setShowSingleFileModal(true)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
     const rejected = []
     const tooLarge = []
     const valid = []
@@ -71,7 +120,7 @@ export default function UploadPage() {
         tooLarge.push(f.name)
         continue
       }
-      valid.push(f)
+      valid.push(makeFileItem(f))
     }
 
     if (rejected.length > 0) {
@@ -81,16 +130,20 @@ export default function UploadPage() {
       setUploadResult({ success: false, error: `文件「${tooLarge[0]}」超过 200MB 限制，请压缩后上传` })
     }
 
+    if (valid.length === 0) return
+
     setFiles((prev) => [...prev, ...valid])
-    if (valid.length > 0 && !form.title) {
-      const first = valid[0]
+    if (!form.title) {
+      const first = valid[0].file
       const base = first.name.replace(/\.[^.]+$/, '')
       setForm((prev) => ({ ...prev, title: base }))
     }
+
+    uploadFiles(valid)
   }
 
   const handleFileSelect = (e) => addFiles(Array.from(e.target.files || []))
-  const removeFile = (index) => setFiles((prev) => prev.filter((_, i) => i !== index))
+  const removeFile = (id) => setFiles((prev) => prev.filter((f) => f.id !== id))
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -98,20 +151,112 @@ export default function UploadPage() {
   }
 
   /* ----------------- 上传 ----------------- */
-  const checkDuplicates = async () => {
-    for (const file of files) {
-      try {
-        const res = await api.checkDuplicate(file.name)
-        if (res.duplicate) {
-          setDuplicateInfo({ filename: file.name })
-          setShowDuplicateModal(true)
-          return true
+  const buildCacheFormData = (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return formData
+  }
+
+  const buildCreateFormData = (fileItem) => {
+    const formData = new FormData()
+    formData.append('file_path', fileItem.filePath)
+    formData.append('file_name', fileItem.file.name)
+    formData.append('mime_type', mimeTypeForFile(fileItem.file))
+    formData.append('title', form.title || fileItem.file.name.replace(/\.[^.]+$/, ''))
+    formData.append('description', form.description)
+    formData.append('category', form.category)
+    if (form.sub_category)  formData.append('sub_category', form.sub_category)
+    if (form.department)    formData.append('department', form.department)
+    if (form.major)         formData.append('major', form.major)
+    if (form.course_name)   formData.append('course_name', form.course_name)
+    if (form.instructor)    formData.append('instructor', form.instructor)
+    if (form.year)          formData.append('year', form.year)
+    if (form.file_type)     formData.append('file_type', form.file_type)
+    if (form.uploader_name) formData.append('uploader_name', form.uploader_name)
+    return formData
+  }
+
+  const uploadWithProgress = (fileItem, formData, endpoint) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      const startTime = performance.now()
+
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0, speed: '' } : f))
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (!e.lengthComputable) return
+        const progress = Math.round((e.loaded / e.total) * 100)
+        const duration = (performance.now() - startTime) / 1000
+        const speed = duration > 0 ? formatSpeed(e.loaded / duration) : ''
+        setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, progress, speed } : f))
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          let res = {}
+          try { res = JSON.parse(xhr.responseText) } catch {}
+          resolve(res)
+        } else {
+          let msg = `上传失败 (HTTP ${xhr.status})`
+          try { const p = JSON.parse(xhr.responseText); if (p.error) msg = p.error } catch {}
+          setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'error', error: msg, speed: '' } : f))
+          reject(new Error(msg))
         }
-      } catch (e) {
-        console.error(e)
+      })
+
+      xhr.addEventListener('error', () => {
+        setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'error', error: '网络错误，请重试', speed: '' } : f))
+        reject(new Error('网络错误'))
+      })
+
+      xhr.addEventListener('abort', () => {
+        setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'error', error: '已取消', speed: '' } : f))
+        reject(new Error('已取消'))
+      })
+
+      xhr.open('POST', endpoint)
+      const token = localStorage.getItem('token')
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      xhr.send(formData)
+    })
+  }
+
+  const uploadOneFile = async (fileItem, skipDuplicate = false) => {
+    if (fileItem.status === 'done' || fileItem.status === 'uploading') return
+    if (uploadingIdsRef.current.has(fileItem.id)) return
+    uploadingIdsRef.current.add(fileItem.id)
+
+    try {
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0, speed: '' } : f))
+
+      if (!skipDuplicate) {
+        try {
+          const res = await api.checkDuplicate(fileItem.file.name)
+          if (res.duplicate) {
+            setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'duplicate' } : f))
+            setDuplicateInfo({ filename: fileItem.file.name })
+            setShowDuplicateModal(true)
+            return
+          }
+        } catch (e) {
+          console.error(e)
+          setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'error', error: '检查失败，请重试' } : f))
+          return
+        }
       }
+
+      const res = await uploadWithProgress(fileItem, buildCacheFormData(fileItem.file), `${API_BASE}/api/upload/cache`)
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'done', filePath: res.file_path, progress: 100, speed: '' } : f))
+    } catch (e) {
+      console.error(e)
+      setFiles(prev => prev.map(f => f.id === fileItem.id ? { ...f, status: 'error', error: e.message || '上传失败', speed: '' } : f))
+    } finally {
+      uploadingIdsRef.current.delete(fileItem.id)
     }
-    return false
+  }
+
+  const uploadFiles = (items) => {
+    items.forEach(item => uploadOneFile(item))
   }
 
   const validateForm = () => {
@@ -120,16 +265,39 @@ export default function UploadPage() {
     if (!form.title.trim()) errors.push('给资料起个名字吧')
     if (!form.category) errors.push('选一下分类哦')
     if (form.category === 'package') {
-      if (files.length > 0 && !files.every(f => f.name.toLowerCase().endsWith('.zip'))) {
+      if (files.length > 0 && !files.every(f => f.file.name.toLowerCase().endsWith('.zip'))) {
         errors.push('「课程资源包」仅支持 ZIP 格式')
       }
     }
     for (const f of files) {
-      if (f.size > MAX_SIZE) {
-        errors.push(`文件「${f.name}」超过 200MB 限制`)
+      if (f.file.size > MAX_SIZE) {
+        errors.push(`文件「${f.file.name}」超过 200MB 限制`)
       }
     }
     return errors
+  }
+
+  const resetAll = () => {
+    setFiles([])
+    setForm(initialForm)
+    setUploadResult(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const submitAll = async () => {
+    setUploadResult(null)
+    try {
+      await Promise.all(files.map(fileItem => {
+        const formData = buildCreateFormData(fileItem)
+        return form.category === 'package'
+          ? api.createZipPackage(formData)
+          : api.createMaterial(formData)
+      }))
+      setShowThanksModal(true)
+      resetAll()
+    } catch (err) {
+      setUploadResult({ success: false, error: err.message || '提交失败，请重试' })
+    }
   }
 
   const handleSubmit = async () => {
@@ -138,55 +306,198 @@ export default function UploadPage() {
       setUploadResult({ success: false, error: errors.join('，') })
       return
     }
-    const hasDuplicate = await checkDuplicates()
-    if (hasDuplicate) return
-    await doUpload()
-  }
-
-  const doUpload = async () => {
-    setUploading(true)
-    setUploadResult(null)
-    try {
-      const results = []
-      const isPackage = form.category === 'package'
-      for (const file of files) {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('title', form.title || file.name.replace(/\.[^.]+$/, ''))
-        formData.append('description', form.description)
-        formData.append('category', form.category)
-        if (form.sub_category)  formData.append('sub_category', form.sub_category)
-        if (form.department)    formData.append('department', form.department)
-        if (form.major)         formData.append('major', form.major)
-        if (form.course_name)   formData.append('course_name', form.course_name)
-        if (form.instructor)    formData.append('instructor', form.instructor)
-        if (form.year)          formData.append('year', form.year)
-        if (form.file_type)     formData.append('file_type', form.file_type)
-        if (form.uploader_name) formData.append('uploader_name', form.uploader_name)
-
-        const endpoint = isPackage ? api.createZipPackage : api.createMaterial
-        const res = await endpoint(formData)
-        results.push({ filename: file.name, success: true, id: res.id })
-      }
-      setUploadResult({ success: true, results })
-      setFiles([])
-      setForm({
-        title: '', description: '',
-        category: '', sub_category: '',
-        department: '', major: '',
-        course_name: '', instructor: '',
-        year: '', file_type: '', uploader_name: '',
-      })
-    } catch (e) {
-      setUploadResult({ success: false, error: e.message || '不太顺利，等一下再试试？' })
-    } finally {
-      setUploading(false)
-      setShowDuplicateModal(false)
+    if (isUploading) {
+      setShowIncompleteModal(true)
+      return
     }
+    if (!allDone) {
+      setShowIncompleteModal(true)
+      return
+    }
+    await submitAll()
   }
+
+  const doUpload = async (skipDuplicate = true) => {
+    setShowDuplicateModal(false)
+    setShowIncompleteModal(false)
+    setUploadResult(null)
+    const toUpload = files.filter(f => f.status !== 'done' && f.status !== 'uploading')
+    if (toUpload.length === 0) return
+    await Promise.all(toUpload.map(f => uploadOneFile(f, skipDuplicate)))
+  }
+
+  /* ----------------- UI ----------------- */
+  const renderFileRow = (fileObj) => {
+    const isZip = fileObj.file.name.toLowerCase().endsWith('.zip')
+    const Icon = isZip ? Package : FileText
+    return (
+      <div
+        key={fileObj.id}
+        className="flex items-center justify-between bg-[--color-cream-50] border border-[--color-line] rounded-2xl px-4 py-2.5 gap-3"
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 ${
+            isZip ? 'bg-[--color-honey-100] text-[--color-honey-700]' : 'bg-[--color-camphor-50] text-[--color-camphor-700]'
+          }`}>
+            <Icon className="w-4 h-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] text-[--color-ink-900] truncate font-medium">{fileObj.file.name}</p>
+            <p className="text-[11.5px] text-[--color-ink-500]">
+              {formatSize(fileObj.file.size)}{isZip ? ' · 课程资源包' : ''}
+            </p>
+            {fileObj.status !== 'pending' && (
+              <div className="mt-1.5">
+                {fileObj.status === 'uploading' && (
+                  <>
+                    <div className="h-1.5 w-full bg-[--color-cream-200] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] rounded-full transition-all"
+                        style={{ width: `${fileObj.progress}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] text-[--color-camphor-600] mt-0.5">
+                      {fileObj.speed ? `${fileObj.speed} · ` : ''}{fileObj.progress}%
+                    </p>
+                  </>
+                )}
+                {fileObj.status === 'done' && (
+                  <p className="text-[11px] text-[--color-camphor-600] flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> 已上传到临时空间
+                  </p>
+                )}
+                {fileObj.status === 'error' && (
+                  <p className="text-[11px] text-[--color-berry-600] flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {fileObj.error}
+                  </p>
+                )}
+                {fileObj.status === 'duplicate' && (
+                  <p className="text-[11px] text-[--color-honey-600] flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" /> 检测到重复，等待确认
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <button
+          onClick={() => removeFile(fileObj.id)}
+          className="grid place-items-center w-8 h-8 rounded-full text-[--color-ink-400] hover:text-[--color-kapok-500] hover:bg-[--color-kapok-50] transition-colors shrink-0"
+          aria-label="移除"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    )
+  }
+
+  const duplicateModal = showDuplicateModal && (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
+      <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-11 h-11 rounded-2xl bg-[--color-honey-100] grid place-items-center">
+            <AlertTriangle className="w-5 h-5 text-[--color-honey-600]" />
+          </div>
+          <div>
+            <h3 className="text-[15.5px] font-bold text-[--color-ink-900]">这个文件好像传过了</h3>
+            <p className="text-[12px] text-[--color-ink-500]">检测到同名文件，要不要确认一下？</p>
+          </div>
+        </div>
+        <p className="text-[13.5px] text-[--color-ink-700] mb-5 bg-[--color-cream-50] border border-[--color-line] rounded-2xl px-4 py-3 break-all">
+          {duplicateInfo?.filename}
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setShowDuplicateModal(false)}
+            className="h-10 px-4 rounded-full bg-white border border-[--color-line] text-[13px] font-medium text-[--color-ink-700] hover:bg-[--color-cream-100]"
+          >
+            我再想想
+          </button>
+          <button
+            onClick={() => doUpload(true)}
+            className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)]"
+          >
+            还是传上去
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const incompleteModal = showIncompleteModal && (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
+      <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-11 h-11 rounded-2xl bg-[--color-honey-100] grid place-items-center">
+            <AlertTriangle className="w-5 h-5 text-[--color-honey-600]" />
+          </div>
+          <div>
+            <h3 className="text-[15.5px] font-bold text-[--color-ink-900]">文件还没准备好</h3>
+            <p className="text-[12px] text-[--color-ink-500]">等文件全部上传到临时空间后，再点击正式上传哦</p>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowIncompleteModal(false)}
+            className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)]"
+          >
+            我知道了
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const thanksModal = showThanksModal && (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
+      <div className="bg-white rounded-3xl p-7 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line] text-center">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[--color-honey-200] to-[--color-kapok-200] grid place-items-center mx-auto mb-4">
+          <Sparkles className="w-7 h-7 text-[--color-kapok-600]" />
+        </div>
+        <h3 className="text-[20px] font-bold text-[--color-ink-900] mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          这份心意已经接住了 🎉
+        </h3>
+        <p className="text-[14px] text-[--color-ink-600] leading-relaxed mb-6">
+          谢谢你愿意把资料分享出来。<br />
+          每一份笔记、每一张试卷，都会让学弟学妹少熬一夜。<br />
+          你已经帮到了很多人。
+        </p>
+        <button
+          onClick={() => setShowThanksModal(false)}
+          className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.03] active:scale-[0.97] transition-all"
+        >
+          <Sparkles className="w-4 h-4" /> 再传一份
+        </button>
+      </div>
+    </div>
+  )
+
+  const singleFileModal = showSingleFileModal && (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
+      <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-11 h-11 rounded-2xl bg-[--color-honey-100] grid place-items-center">
+            <AlertTriangle className="w-5 h-5 text-[--color-honey-600]" />
+          </div>
+          <div>
+            <h3 className="text-[15.5px] font-bold text-[--color-ink-900]">一次只能上传一个文件</h3>
+            <p className="text-[12px] text-[--color-ink-500]">目前每次仅支持上传一份文件，请先移除当前文件后再试。</p>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowSingleFileModal(false)}
+            className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)]"
+          >
+            我知道了
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="flex flex-col gap-7 max-w-[860px] mx-auto animate-fade-up">
+    <div className="flex flex-col gap-7 max-w-[860px] mx-auto">
       {/* ============== Hero ============== */}
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#FFF6EC] via-white to-[#FFEFE9] px-6 md:px-9 py-7 md:py-8">
         <div className="absolute -top-6 -right-6 text-[140px] opacity-15 select-none pointer-events-none animate-float">🤝</div>
@@ -203,6 +514,16 @@ export default function UploadPage() {
             一份小笔记，可能就让一位学弟学妹少熬一夜。
             <br className="hidden md:block" />
             <span className="text-[--color-ink-500]">拆掉一堵墙，靠的就是大家这点善意。</span>
+          </p>
+          <p className="text-[12.5px] text-[--color-ink-500] mt-3 leading-relaxed max-w-2xl inline-flex items-center gap-1.5 flex-wrap">
+            <Mail className="w-3.5 h-3.5" />
+            如需大批量上传，可联系 Jaison：
+            <a
+              href="mailto:zhengzsh5@mail2.sysu.edu.cn"
+              className="text-[--color-camphor-700] font-medium hover:underline"
+            >
+              zhengzsh5@mail2.sysu.edu.cn
+            </a>
           </p>
         </div>
       </section>
@@ -232,9 +553,9 @@ export default function UploadPage() {
             支持 PDF / DOC / PPT / XLS / TXT / MD / 图片 / ZIP，最大 200MB
           </p>
           <p className="text-[11.5px] text-[--color-ink-400] mt-2">
-            先选分类再传文件 —— 课程资源包仅支持 ZIP 格式 🎁
+            文件添加后会自动上传到临时空间，填写完资料信息后点击正式上传按钮提交 🎁
           </p>
-          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} accept={form.category === 'package' ? '.zip' : '.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.jpg,.jpeg,.png,.zip,.rar,.7z'} />
+          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.jpg,.jpeg,.png,.zip,.rar,.7z" />
         </div>
 
         {/* 已选文件列表 */}
@@ -251,31 +572,7 @@ export default function UploadPage() {
                 清空
               </button>
             </div>
-            {files.map((file, i) => {
-              const isZip = file.name.toLowerCase().endsWith('.zip')
-              const Icon = isZip ? Package : FileText
-              return (
-                <div key={i} className="flex items-center justify-between bg-[--color-cream-50] border border-[--color-line] rounded-2xl px-4 py-2.5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 ${
-                      isZip ? 'bg-[--color-honey-100] text-[--color-honey-700]' : 'bg-[--color-camphor-50] text-[--color-camphor-700]'
-                    }`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[13.5px] text-[--color-ink-900] truncate font-medium">{file.name}</p>
-                      <p className="text-[11.5px] text-[--color-ink-500]">{formatSize(file.size)}{isZip ? ' · 课程资源包' : ''}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeFile(i)}
-                    className="grid place-items-center w-8 h-8 rounded-full text-[--color-ink-400] hover:text-[--color-kapok-500] hover:bg-[--color-kapok-50] transition-colors shrink-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              )
-            })}
+            {files.map(renderFileRow)}
           </div>
         )}
 
@@ -298,136 +595,103 @@ export default function UploadPage() {
                 },
                 camphor: {
                   border: 'border-[--color-camphor-600]',
-                  bg: 'bg-gradient-to-br from-[#E8F5EC] to-[#D0EBD8]',
+                  bg: 'bg-gradient-to-br from-[#E8F5EC] to-[#CFEAD7]',
                   shadow: 'shadow-[0_12px_32px_-12px_rgba(45,106,79,0.55)]',
-                  ring: 'ring-[3px] ring-[#D0EBD8] ring-offset-2',
+                  ring: 'ring-[3px] ring-[#CFEAD7] ring-offset-2',
                   check: 'bg-[--color-camphor-600] shadow-[0_4px_10px_-4px_rgba(45,106,79,0.6)]',
-                  label: 'text-[--color-camphor-800]',
+                  label: 'text-[--color-camphor-700]',
                   hoverBorder: 'hover:border-[--color-camphor-300]',
                 },
                 honey: {
                   border: 'border-[--color-honey-500]',
-                  bg: 'bg-gradient-to-br from-[#FFF6EC] to-[#FFE6CB]',
+                  bg: 'bg-gradient-to-br from-[#FFF4E6] to-[#FFE4C2]',
                   shadow: 'shadow-[0_12px_32px_-12px_rgba(244,125,44,0.55)]',
-                  ring: 'ring-[3px] ring-[#FFE6CB] ring-offset-2',
+                  ring: 'ring-[3px] ring-[#FFE4C2] ring-offset-2',
                   check: 'bg-[--color-honey-500] shadow-[0_4px_10px_-4px_rgba(244,125,44,0.6)]',
                   label: 'text-[--color-honey-700]',
                   hoverBorder: 'hover:border-[--color-honey-300]',
                 },
                 mist: {
                   border: 'border-[--color-mist-500]',
-                  bg: 'bg-gradient-to-br from-[#EEF3F8] to-[#D4E0EC]',
-                  shadow: 'shadow-[0_12px_32px_-12px_rgba(90,120,150,0.55)]',
-                  ring: 'ring-[3px] ring-[#D4E0EC] ring-offset-2',
-                  check: 'bg-[--color-mist-500] shadow-[0_4px_10px_-4px_rgba(90,120,150,0.6)]',
+                  bg: 'bg-gradient-to-br from-[#F0F4F8] to-[#DDE7F0]',
+                  shadow: 'shadow-[0_12px_32px_-12px_rgba(61,104,144,0.55)]',
+                  ring: 'ring-[3px] ring-[#DDE7F0] ring-offset-2',
+                  check: 'bg-[--color-mist-500] shadow-[0_4px_10px_-4px_rgba(61,104,144,0.6)]',
                   label: 'text-[--color-mist-700]',
                   hoverBorder: 'hover:border-[--color-mist-300]',
                 },
-              }
-              const s = styles[tone]
+              }[tone]
+
               return (
                 <button
                   key={c.value}
                   type="button"
-                  onClick={() => setForm((p) => ({ ...p, category: c.value }))}
-                  className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left border-2 transition-all duration-300 ${
+                  onClick={() => handleChange({ target: { name: 'category', value: c.value } })}
+                  className={`relative text-left rounded-2xl border p-4 transition-all ${
                     active
-                      ? `${s.border} ${s.bg} ${s.shadow} ${s.ring}`
-                      : `border-[--color-line] bg-white ${s.hoverBorder} hover:bg-[--color-cream-50] hover:shadow-[var(--shadow-sm)]`
+                      ? `${styles.bg} ${styles.border} ${styles.shadow} ${styles.ring}`
+                      : `bg-white border-[--color-line] hover:border-[--color-camphor-300] hover:bg-[--color-cream-50]`
                   }`}
                 >
-                  {/* 勾选标记 */}
                   {active && (
-                    <span className={`absolute -top-2 -right-2 w-6 h-6 rounded-full text-white grid place-items-center ${s.check}`}>
-                      <CheckCircle className="w-3.5 h-3.5" />
-                    </span>
+                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full grid place-items-center ${styles.check}`}>
+                      <CheckCircle className="w-3 h-3 text-white" />
+                    </div>
                   )}
-                  <span className={`text-2xl transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>
-                    {c.emoji}
-                  </span>
-                  <span className="flex-1 min-w-0">
-                    <span className={`block text-[14px] font-semibold transition-colors ${active ? s.label : 'text-[--color-ink-900]'}`}>
-                      {c.label}
-                    </span>
-                    <span className={`block text-[11.5px] transition-colors ${active ? 'text-[--color-ink-600]' : 'text-[--color-ink-500]'}`}>
-                      {c.desc}
-                    </span>
-                  </span>
+                  <div className="text-[26px] mb-1">{c.emoji}</div>
+                  <div className={`text-[14.5px] font-bold ${active ? styles.label : 'text-[--color-ink-900]'}`}>{c.label}</div>
+                  <div className="text-[11.5px] text-[--color-ink-500] mt-0.5 leading-snug">{c.desc}</div>
                 </button>
               )
             })}
           </div>
         </div>
 
-        {/* 表单 */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
-          <div className="md:col-span-2">
-            <Label required>资料标题</Label>
-            <Input name="title" value={form.title} onChange={handleChange}
-              placeholder="例如：数据结构 2023 年期末真题（含答案）"
-            />
-          </div>
-
-          <div>
-            <Label>资料类型</Label>
+        {/* 子分类（非经验攻略） */}
+        {form.category && form.category !== 'experience' && (
+          <div className="mt-5">
+            <Label>子分类</Label>
             <Select name="sub_category" value={form.sub_category} onChange={handleChange}>
-              {subCategories.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {subCategories.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
             </Select>
           </div>
+        )}
 
-          <div>
-            <Label>所属年份</Label>
-            <Input type="number" name="year" value={form.year} onChange={handleChange}
-              placeholder="例如：2023" min="1990" max="2099"
-            />
+        {/* 表单字段 */}
+        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <Label required>资料名称</Label>
+            <Input name="title" value={form.title} onChange={handleChange} placeholder="比如：线性代数 2024 期末试卷" />
           </div>
-
-          <div>
-            <Label>院系</Label>
-            <Input name="department" value={form.department} onChange={handleChange}
-              placeholder="例如：计算机学院"
-            />
+          <div className="md:col-span-2">
+            <Label>一句话描述</Label>
+            <Input name="description" value={form.description} onChange={handleChange} placeholder="optional：讲讲这份资料的内容或来源" />
           </div>
-
+          <div>
+            <Label>学院 / 院系</Label>
+            <Input name="department" value={form.department} onChange={handleChange} placeholder="如：数学学院" />
+          </div>
           <div>
             <Label>专业</Label>
-            <Input name="major" value={form.major} onChange={handleChange}
-              placeholder="例如：软件工程"
-            />
+            <Input name="major" value={form.major} onChange={handleChange} placeholder="如：数学与应用数学" />
           </div>
-
           <div>
             <Label>课程名称</Label>
-            <Input name="course_name" value={form.course_name} onChange={handleChange}
-              placeholder="例如：数据结构"
-            />
+            <Input name="course_name" value={form.course_name} onChange={handleChange} placeholder="如：线性代数" />
           </div>
-
           <div>
             <Label>授课老师</Label>
-            <Input name="instructor" value={form.instructor} onChange={handleChange}
-              placeholder="例如：张老师"
-            />
+            <Input name="instructor" value={form.instructor} onChange={handleChange} placeholder="如：张老师" />
           </div>
-
-          <div className="md:col-span-2">
-            <Label>说几句简介（可选）</Label>
-            <textarea
-              name="description" value={form.description} onChange={handleChange}
-              placeholder="比如「这份是带答案版」「整理得比较细的笔记」之类，让别人更快判断要不要收下"
-              rows={3}
-              className="w-full px-4 py-2.5 bg-[--color-cream-50] border border-[--color-line] rounded-2xl text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition resize-none"
-            />
+          <div>
+            <Label>学年</Label>
+            <Input name="year" value={form.year} onChange={handleChange} placeholder="如：2024" />
           </div>
-
-          <div className="md:col-span-2">
-            <Label>署名（可选）</Label>
-            <Input name="uploader_name" value={form.uploader_name} onChange={handleChange}
-              placeholder="留个名字会更亲切（不留也没事，会显示「匿名同学」）"
-            />
-            <p className="text-[11.5px] text-[--color-ink-400] mt-1.5 flex items-center gap-1">
-              <Heart className="w-3 h-3 text-[--color-kapok-400]" /> 你的名字会出现在主页的「致谢」里
-            </p>
+          <div>
+            <Label>贡献者昵称</Label>
+            <Input name="uploader_name" value={form.uploader_name} onChange={handleChange} placeholder="默认匿名同学" />
           </div>
         </div>
 
@@ -441,10 +705,12 @@ export default function UploadPage() {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={uploading || files.length === 0}
-            className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all"
+            disabled={files.length === 0}
+            className={`inline-flex items-center gap-2 h-11 px-6 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.03] active:scale-[0.97] transition-all ${
+              files.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            {uploading ? (
+            {isUploading ? (
               <>
                 <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 正在上传…
@@ -458,40 +724,6 @@ export default function UploadPage() {
           </button>
         </div>
       </section>
-
-      {/* 重复弹窗 */}
-      {showDuplicateModal && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-11 h-11 rounded-2xl bg-[--color-honey-100] grid place-items-center">
-                <AlertTriangle className="w-5 h-5 text-[--color-honey-600]" />
-              </div>
-              <div>
-                <h3 className="text-[15.5px] font-bold text-[--color-ink-900]">这个文件好像传过了</h3>
-                <p className="text-[12px] text-[--color-ink-500]">检测到同名文件，要不要确认一下？</p>
-              </div>
-            </div>
-            <p className="text-[13.5px] text-[--color-ink-700] mb-5 bg-[--color-cream-50] border border-[--color-line] rounded-2xl px-4 py-3 break-all">
-              {duplicateInfo?.filename}
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowDuplicateModal(false)}
-                className="h-10 px-4 rounded-full bg-white border border-[--color-line] text-[13px] font-medium text-[--color-ink-700] hover:bg-[--color-cream-100]"
-              >
-                我再想想
-              </button>
-              <button
-                onClick={doUpload}
-                className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)]"
-              >
-                还是传上去
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 结果 */}
       {uploadResult && (
@@ -510,23 +742,16 @@ export default function UploadPage() {
               {uploadResult.success ? cheer('thanks') : '上传遇到了点小问题'}
             </span>
           </div>
-          {uploadResult.success ? (
-            <ul className="text-[13px] text-[--color-camphor-700] space-y-1">
-              {uploadResult.results.map((r, i) => (
-                <li key={i} className="flex items-center gap-2">
-                  <span>{r.filename}</span>
-                </li>
-              ))}
-              <li className="text-[12px] text-[--color-camphor-600] mt-2">
-                可以在首页看到刚刚上传的资料 ——
-                <button onClick={() => navigate('/')} className="ml-1 underline-offset-4 underline hover:text-[--color-camphor-900]">回首页瞧瞧</button>
-              </li>
-            </ul>
-          ) : (
+          {!uploadResult.success && (
             <p className="text-[13px] text-[--color-berry-600]">{uploadResult.error}</p>
           )}
         </div>
       )}
+
+      {createPortal(duplicateModal, document.body)}
+      {createPortal(incompleteModal, document.body)}
+      {createPortal(thanksModal, document.body)}
+      {createPortal(singleFileModal, document.body)}
     </div>
   )
 }

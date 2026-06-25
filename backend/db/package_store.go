@@ -62,7 +62,7 @@ func (s *PackageStore) List(filter *models.CoursePackageFilter) ([]models.Course
 		return nil, 0, err
 	}
 
-	sortBy := "created_at"
+	sortBy := "datetime(created_at)"
 	switch filter.SortBy {
 	case "title":
 		sortBy = "title"

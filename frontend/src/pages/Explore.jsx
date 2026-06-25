@@ -172,7 +172,7 @@ export default function Explore({ category, title }) {
     : '这里还没人来过，要不你来开个头？'
 
   return (
-    <div className="flex flex-col gap-8 md:gap-10 animate-fade-up">
+    <div className="flex flex-col gap-8 md:gap-10">
       {/* ============= Hero ============= */}
       <section className={`relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br ${tone.ring} px-6 md:px-9 py-7 md:py-9`}>
         <div className="absolute -top-8 -right-8 text-[160px] opacity-15 select-none pointer-events-none rotate-[6deg]">{hero.emoji}</div>

@@ -8,7 +8,7 @@ export default function Login() {
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect') || '/'
 
-  const [mode, setMode] = useState('login') // 'login' | 'register'
+  const [mode, setMode] = useState(localStorage.getItem('token') ? 'login' : 'register') // 'login' | 'register'
   const [useCode, setUseCode] = useState(false) // login mode: password vs code
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -42,7 +42,7 @@ export default function Login() {
     }
     if (countdown > 0) return
     try {
-      await api.sendCode(email.trim())
+      await api.sendCode(email.trim(), mode)
       setSuccessMsg('验证码已发送，请查收邮件')
       setCountdown(60)
     } catch (e) {
@@ -140,7 +140,7 @@ export default function Login() {
   }
 
   return (
-    <div className="flex flex-col gap-7 max-w-[480px] mx-auto animate-fade-up pt-4 md:pt-10">
+    <div className="flex flex-col gap-7 max-w-[480px] mx-auto pt-4 md:pt-10">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#FFF6EC] via-white to-[#FFEFE9] px-6 md:px-9 py-7 md:py-8 text-center">
         <div className="absolute -top-6 -right-6 text-[140px] opacity-15 select-none pointer-events-none animate-float">🔐</div>
@@ -164,28 +164,31 @@ export default function Login() {
       {/* Form card */}
       <section className="bg-white border border-[--color-line] rounded-3xl p-5 md:p-7 shadow-[var(--shadow-xs)]">
         {/* Mode toggle */}
-        <div className="flex items-center gap-2 mb-6 p-1 bg-[--color-cream-100] rounded-full">
+        <div className="relative flex items-center h-12 p-1 mb-6 rounded-full bg-[--color-cream-100] border border-[--color-line]">
+          {/* sliding thumb */}
+          <div
+            className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] shadow-[0_4px_12px_-4px_rgba(244,125,44,0.45)] transition-all duration-200 ease-out"
+            style={{ left: mode === 'login' ? '4px' : '50%' }}
+          />
           <button
             type="button"
             onClick={() => { setMode('login'); setError(''); setSuccessMsg('') }}
-            className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13.5px] font-semibold transition-all ${
-              mode === 'login'
-                ? 'bg-white text-[--color-camphor-700] shadow-sm'
-                : 'text-[--color-ink-500] hover:text-[--color-ink-700]'
+            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 h-full rounded-full text-[14px] font-bold transition-colors ${
+              mode === 'login' ? 'text-white' : 'text-[--color-ink-500]'
             }`}
+            aria-pressed={mode === 'login'}
           >
-            <LogIn className="w-3.5 h-3.5" /> 登录
+            <LogIn className="w-4 h-4" /> 登录
           </button>
           <button
             type="button"
             onClick={() => { setMode('register'); setError(''); setSuccessMsg('') }}
-            className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-full text-[13.5px] font-semibold transition-all ${
-              mode === 'register'
-                ? 'bg-white text-[--color-camphor-700] shadow-sm'
-                : 'text-[--color-ink-500] hover:text-[--color-ink-700]'
+            className={`relative z-10 flex-1 flex items-center justify-center gap-1.5 h-full rounded-full text-[14px] font-bold transition-colors ${
+              mode === 'register' ? 'text-white' : 'text-[--color-ink-500]'
             }`}
+            aria-pressed={mode === 'register'}
           >
-            <UserPlus className="w-3.5 h-3.5" /> 注册
+            <UserPlus className="w-4 h-4" /> 注册
           </button>
         </div>
 

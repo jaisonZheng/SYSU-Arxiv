@@ -88,7 +88,7 @@ func (s *MaterialStore) List(filter *models.MaterialFilter) ([]models.Material, 
 		return nil, 0, err
 	}
 
-	sortBy := "created_at"
+	sortBy := "datetime(created_at)"
 	switch filter.SortBy {
 	case "title":
 		sortBy = "title"
@@ -261,4 +261,36 @@ func (s *MaterialStore) GetTotalThanks() (int64, error) {
 		return 0, err
 	}
 	return total, nil
+}
+
+type DownloadRankItem struct {
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	Type          string `json:"type"`
+	DownloadCount int64  `json:"download_count"`
+}
+
+func (s *MaterialStore) GetTopDownloadsMerged(limit int) ([]DownloadRankItem, error) {
+	rows, err := DB.Query(`
+		SELECT id, title, 'material' as type, download_count
+		FROM materials
+		UNION ALL
+		SELECT id, title, 'package' as type, download_count
+		FROM course_packages
+		ORDER BY download_count DESC, title ASC
+		LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := []DownloadRankItem{}
+	for rows.Next() {
+		var item DownloadRankItem
+		if err := rows.Scan(&item.ID, &item.Title, &item.Type, &item.DownloadCount); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
 }

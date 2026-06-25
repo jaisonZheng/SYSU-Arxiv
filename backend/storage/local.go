@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -37,14 +38,77 @@ func (s *LocalStorage) SaveFile(file multipart.File, header *multipart.FileHeade
 		return "", 0, fmt.Errorf("failed to write file: %w", err)
 	}
 
-	return filePath, size, nil
+	relPath, err := filepath.Rel(s.BasePath, filePath)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to get relative path: %w", err)
+	}
+	return relPath, size, nil
 }
 
 func (s *LocalStorage) DeleteFile(filePath string) error {
 	if filePath == "" {
 		return nil
 	}
-	return os.Remove(filePath)
+	return os.Remove(s.resolvePath(filePath))
+}
+
+func (s *LocalStorage) MoveFile(srcPath, dstSubDir string) (string, int64, error) {
+	absSrc, err := filepath.Abs(s.resolvePath(srcPath))
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to resolve source path: %w", err)
+	}
+
+	absBase, err := filepath.Abs(s.BasePath)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to resolve base path: %w", err)
+	}
+
+	if !strings.HasPrefix(absSrc, absBase) {
+		return "", 0, fmt.Errorf("source path is outside storage root")
+	}
+
+	info, err := os.Stat(absSrc)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to stat source file: %w", err)
+	}
+
+	timestamp := time.Now().UnixNano()
+	filename := fmt.Sprintf("%d_%s", timestamp, filepath.Base(absSrc))
+	dstDir := filepath.Join(absBase, dstSubDir)
+	if err := os.MkdirAll(dstDir, 0755); err != nil {
+		return "", 0, fmt.Errorf("failed to create destination dir: %w", err)
+	}
+	absDst := filepath.Join(dstDir, filename)
+
+	if err := os.Rename(absSrc, absDst); err != nil {
+		// Fallback to copy+delete if rename crosses devices
+		srcFile, err := os.Open(absSrc)
+		if err != nil {
+			return "", 0, fmt.Errorf("failed to open source file: %w", err)
+		}
+		defer srcFile.Close()
+
+		dstFile, err := os.Create(absDst)
+		if err != nil {
+			return "", 0, fmt.Errorf("failed to create destination file: %w", err)
+		}
+		if _, err := io.Copy(dstFile, srcFile); err != nil {
+			dstFile.Close()
+			return "", 0, fmt.Errorf("failed to copy file: %w", err)
+		}
+		if err := dstFile.Close(); err != nil {
+			return "", 0, fmt.Errorf("failed to close destination file: %w", err)
+		}
+		if err := os.Remove(absSrc); err != nil {
+			return "", 0, fmt.Errorf("failed to remove source file: %w", err)
+		}
+	}
+
+	relDst, err := filepath.Rel(absBase, absDst)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to get relative destination path: %w", err)
+	}
+	return relDst, info.Size(), nil
 }
 
 func (s *LocalStorage) resolvePath(filePath string) string {

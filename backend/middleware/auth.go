@@ -45,6 +45,31 @@ func AuthRequired() gin.HandlerFunc {
 	}
 }
 
+func AuthOptional() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := c.GetHeader("Authorization")
+		var tokenStr string
+		if auth != "" && strings.HasPrefix(auth, "Bearer ") {
+			tokenStr = strings.TrimPrefix(auth, "Bearer ")
+		} else {
+			tokenStr = c.Query("token")
+		}
+		if tokenStr != "" {
+			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+				return []byte(jwtSecret()), nil
+			})
+			if err == nil && token.Valid {
+				if claims, ok := token.Claims.(jwt.MapClaims); ok {
+					if userID, ok := claims["user_id"].(float64); ok {
+						c.Set("userID", int64(userID))
+					}
+				}
+			}
+		}
+		c.Next()
+	}
+}
+
 func jwtSecret() string {
 	if s := os.Getenv("JWT_SECRET"); s != "" {
 		return s

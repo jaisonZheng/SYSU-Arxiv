@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? '';
+export const API_BASE = import.meta.env.VITE_API_URL ?? '';
+
+export const ADMIN_TOKEN_KEY = 'admin_token';
 
 async function fetchJSON(path, options = {}) {
   const url = `${API_BASE}${path}`;
@@ -9,6 +11,33 @@ async function fetchJSON(path, options = {}) {
   }
   // Automatically attach Authorization header if token exists
   const token = localStorage.getItem('token');
+  if (token) {
+    fetchOpts.headers = {
+      ...(fetchOpts.headers || {}),
+      Authorization: `Bearer ${token}`,
+    };
+  }
+  const res = await fetch(url, fetchOpts);
+  if (!res.ok) {
+    const text = await res.text();
+    let err;
+    try {
+      const parsed = JSON.parse(text);
+      err = parsed.error || parsed.message || text;
+    } catch {
+      err = text || `HTTP ${res.status}`;
+    }
+    const error = new Error(err);
+    error.status = res.status;
+    throw error;
+  }
+  return res.json();
+}
+
+async function fetchAdminJSON(path, options = {}) {
+  const url = `${API_BASE}${path}`;
+  const fetchOpts = { ...options };
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
   if (token) {
     fetchOpts.headers = {
       ...(fetchOpts.headers || {}),
@@ -61,6 +90,11 @@ export const api = {
     body: formData,
   }),
 
+  uploadToCache: (formData) => fetchJSON('/api/upload/cache', {
+    method: 'POST',
+    body: formData,
+  }),
+
   downloadMaterial: (id) => {
     const url = `${API_BASE}/api/materials/${id}/download`;
     return getDownloadUrl(url);
@@ -109,10 +143,10 @@ export const api = {
   getTotalThanks: () => fetchJSON('/api/stats/thanks'),
 
   // ========== Auth ==========
-  sendCode: (email) => fetchJSON('/api/auth/send-code', {
+  sendCode: (email, purpose = 'register') => fetchJSON('/api/auth/send-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, purpose }),
   }),
 
   register: (data) => fetchJSON('/api/auth/register', {
@@ -155,6 +189,26 @@ export const api = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ new_email, code }),
+  }),
+
+  // ========== Admin Monitor ==========
+  adminLogin: (password) => fetchJSON('/api/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  }),
+
+  getAdminOverview: () => fetchAdminJSON('/api/admin/overview'),
+  getAdminSearchTop: () => fetchAdminJSON('/api/admin/search-top'),
+  getAdminSearchEmpty: () => fetchAdminJSON('/api/admin/search-empty'),
+  getAdminDownloadsTop: () => fetchAdminJSON('/api/admin/downloads-top'),
+  getAdminTrends: () => fetchAdminJSON('/api/admin/trends'),
+  getAdminInvitersTop: () => fetchAdminJSON('/api/admin/inviters-top'),
+
+  logSearch: (query, resultCount) => fetchJSON('/api/search/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, result_count: resultCount }),
   }),
 };
 

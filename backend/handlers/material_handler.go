@@ -61,8 +61,14 @@ func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 	auth := r.Group("/api")
 	auth.Use(middleware.AuthRequired())
 	{
-		auth.POST("/materials", h.CreateMaterial)
 		auth.GET("/materials/:id/download", h.DownloadMaterial)
+	}
+
+	// Upload can be anonymous
+	upload := r.Group("/api")
+	upload.Use(middleware.AuthOptional())
+	{
+		upload.POST("/materials", h.CreateMaterial)
 	}
 }
 
@@ -141,15 +147,29 @@ func (h *MaterialHandler) GetMaterial(c *gin.Context) {
 
 func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 	userID := c.GetInt64("userID")
+	validUploader := userID > 0
 
-	file, header, err := c.Request.FormFile("file")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
+	filePath := c.PostForm("file_path")
+	if filePath == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file_path required"})
 		return
 	}
-	defer file.Close()
 
-	fileName := header.Filename
+	// Security: file_path must point to the cache directory
+	if !strings.HasPrefix(filePath, "cache/") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file_path"})
+		return
+	}
+
+	if !h.storage.FileExists(filePath) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cached file not found"})
+		return
+	}
+
+	fileName := c.PostForm("file_name")
+	if fileName == "" {
+		fileName = filepath.Base(filePath)
+	}
 	fileExt := strings.ToLower(filepath.Ext(fileName))
 
 	allowedExts := map[string]bool{
@@ -163,10 +183,15 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		return
 	}
 
-	filePath, fileSize, err := h.storage.SaveFile(file, header, "files")
+	finalPath, fileSize, err := h.storage.MoveFile(filePath, "files")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to move file: " + err.Error()})
 		return
+	}
+
+	mimeType := c.PostForm("mime_type")
+	if mimeType == "" {
+		mimeType = mimeTypeForExt(fileExt)
 	}
 
 	m := &models.Material{
@@ -180,11 +205,11 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 		Instructor:   sql.NullString{String: c.PostForm("instructor"), Valid: c.PostForm("instructor") != ""},
 		FileType:     sql.NullString{String: c.PostForm("file_type"), Valid: c.PostForm("file_type") != ""},
 		UploaderName: sql.NullString{String: c.PostForm("uploader_name"), Valid: c.PostForm("uploader_name") != ""},
-		UploaderID:   sql.NullInt64{Int64: userID, Valid: true},
+		UploaderID:   sql.NullInt64{Int64: userID, Valid: validUploader},
 		FileName:     fileName,
-		FilePath:     filePath,
+		FilePath:     finalPath,
 		FileSize:     fileSize,
-		MimeType:     sql.NullString{String: header.Header.Get("Content-Type"), Valid: header.Header.Get("Content-Type") != ""},
+		MimeType:     sql.NullString{String: mimeType, Valid: mimeType != ""},
 	}
 
 	if m.Title == "" {
@@ -204,18 +229,18 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 
 	id, err := h.store.Create(m)
 	if err != nil {
-		h.storage.DeleteFile(filePath)
+		h.storage.DeleteFile(finalPath)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create material: " + err.Error()})
 		return
 	}
 
 	// Record upload
-	if h.recordStore != nil {
+	if validUploader && h.recordStore != nil {
 		h.recordStore.CreateUploadRecord(userID, id, "material")
 	}
 
 	// Add bonus quota (+3) for upload
-	if h.quotaStore != nil {
+	if validUploader && h.quotaStore != nil {
 		user, _ := db.NewUserStore().GetByID(userID)
 		if user != nil {
 			weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)

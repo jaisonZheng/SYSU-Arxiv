@@ -60,7 +60,7 @@ export default function TopNav() {
   const handleSearch = (e) => {
     e.preventDefault()
     if (search.trim()) {
-      navigate(`/past-exams?search=${encodeURIComponent(search.trim())}`)
+      navigate(`/search?q=${encodeURIComponent(search.trim())}`)
       setSearch('')
     }
   }
@@ -125,7 +125,7 @@ export default function TopNav() {
         </form>
 
         {/* Right actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
           <a
             href="https://github.com/jaisonZheng/SYSU-Arxiv.git"
             target="_blank" rel="noopener noreferrer"

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { api, isLoggedIn, triggerDownload } from '../api/client'
 import QuotaModal from './QuotaModal'
+import DownloadShareModal from './DownloadShareModal'
 import ThankButton from './ThankButton'
 import {
   timeAgo,
@@ -35,6 +36,9 @@ export default function ResourceCard({ material }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [showQuotaModal, setShowQuotaModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareRemaining, setShareRemaining] = useState(0)
+  const [downloading, setDownloading] = useState(false)
 
   const cat  = categoryMeta[material.category] || { label: material.category, emoji: '📚' }
   const sub  = subCategoryMeta[material.sub_category]
@@ -44,12 +48,14 @@ export default function ResourceCard({ material }) {
   const handleDownload = async (e) => {
     e.preventDefault()
     e.stopPropagation()
+    if (downloading) return
 
     if (!isLoggedIn()) {
       navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
       return
     }
 
+    setDownloading(true)
     try {
       const quota = await api.getMyQuota()
       if (quota.remaining <= 0) {
@@ -58,6 +64,8 @@ export default function ResourceCard({ material }) {
       }
       const url = api.downloadMaterial(material.id)
       triggerDownload(url, material.file_name)
+      setShareRemaining(Math.max(0, quota.remaining - 1))
+      setShowShareModal(true)
     } catch (err) {
       if (err.status === 401 || err.message === 'unauthorized') {
         localStorage.removeItem('token')
@@ -66,6 +74,8 @@ export default function ResourceCard({ material }) {
       } else {
         console.error(err)
       }
+    } finally {
+      setTimeout(() => setDownloading(false), 2000)
     }
   }
 
@@ -142,9 +152,10 @@ export default function ResourceCard({ material }) {
               <button
                 type="button"
                 onClick={handleDownload}
-                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-[--color-camphor-50] hover:bg-[--color-camphor-100] text-[--color-camphor-700] text-[11.5px] font-semibold transition-colors"
+                disabled={downloading}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full bg-[--color-camphor-50] hover:bg-[--color-camphor-100] text-[--color-camphor-700] text-[11.5px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                收下
+                {downloading ? '下载中…' : '收下'}
               </button>
             </div>
           </div>
@@ -155,6 +166,12 @@ export default function ResourceCard({ material }) {
         <QuotaModal
           onClose={() => setShowQuotaModal(false)}
           onNavigateUpload={() => navigate('/upload')}
+        />
+      )}
+      {showShareModal && (
+        <DownloadShareModal
+          onClose={() => setShowShareModal(false)}
+          remaining={shareRemaining}
         />
       )}
     </>

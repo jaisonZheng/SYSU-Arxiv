@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { api } from '../api/client'
 import { avatarColor, avatarLetter, timeAgo, formatSize } from '../lib/format'
+import ModalPortal from '../components/ModalPortal'
 
 function compressImage(file, maxSize = 256) {
   return new Promise((resolve) => {
@@ -173,7 +174,7 @@ export default function Profile() {
     }
     if (emailCountdown > 0) return
     try {
-      await api.sendCode(newEmail.trim())
+      await api.sendCode(newEmail.trim(), 'change_email')
       showToast('验证码已发送')
       setEmailCountdown(60)
     } catch (err) {
@@ -218,7 +219,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 animate-fade-up max-w-[860px] mx-auto">
+      <div className="flex flex-col gap-6 max-w-[860px] mx-auto">
         <div className="h-[200px] rounded-3xl shimmer-bar opacity-70" />
         <div className="h-[300px] rounded-3xl shimmer-bar opacity-70" />
       </div>
@@ -249,7 +250,7 @@ export default function Profile() {
   const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 animate-fade-up max-w-[860px] mx-auto">
+    <div className="flex flex-col gap-6 md:gap-8 max-w-[860px] mx-auto">
       {/* ========== User Info Card ========== */}
       <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#EEF6F0] via-white to-[#FFF6EC] px-6 md:px-9 py-7 md:py-8">
         <div className="absolute -top-10 -right-8 text-[160px] opacity-10 select-none pointer-events-none rotate-[6deg]">👤</div>
@@ -483,141 +484,147 @@ export default function Profile() {
 
       {/* ========== Password Modal ========== */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[16px] font-bold text-[--color-ink-900] flex items-center gap-2">
-                <Lock className="w-5 h-5 text-[--color-camphor-500]" /> 修改密码
-              </h3>
-              <button onClick={() => setShowPasswordModal(false)} className="w-8 h-8 rounded-full hover:bg-[--color-cream-100] grid place-items-center text-[--color-ink-500]">
-                <X className="w-4 h-4" />
-              </button>
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
+            <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-[16px] font-bold text-[--color-ink-900] flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-[--color-camphor-500]" /> 修改密码
+                </h3>
+                <button onClick={() => setShowPasswordModal(false)} className="w-8 h-8 rounded-full hover:bg-[--color-cream-100] grid place-items-center text-[--color-ink-500]">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">旧密码</label>
+                  <div className="relative">
+                    <input
+                      type={showOldPwd ? 'text' : 'password'}
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      placeholder="输入当前密码"
+                      className="w-full h-10 px-4 pr-10 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
+                    />
+                    <button type="button" onClick={() => setShowOldPwd((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[--color-ink-400]">
+                      {showOldPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">新密码</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPwd ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="至少 6 位"
+                      className="w-full h-10 px-4 pr-10 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
+                    />
+                    <button type="button" onClick={() => setShowNewPwd((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[--color-ink-400]">
+                      {showNewPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="h-10 px-4 rounded-full bg-white border border-[--color-line] text-[13px] font-medium text-[--color-ink-700] hover:bg-[--color-cream-100]"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={passwordSaving}
+                    className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)] disabled:opacity-50"
+                  >
+                    {passwordSaving ? '保存中…' : '确认修改'}
+                  </button>
+                </div>
+              </form>
             </div>
-            <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">旧密码</label>
-                <div className="relative">
-                  <input
-                    type={showOldPwd ? 'text' : 'password'}
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    placeholder="输入当前密码"
-                    className="w-full h-10 px-4 pr-10 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
-                  />
-                  <button type="button" onClick={() => setShowOldPwd((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[--color-ink-400]">
-                    {showOldPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">新密码</label>
-                <div className="relative">
-                  <input
-                    type={showNewPwd ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="至少 6 位"
-                    className="w-full h-10 px-4 pr-10 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
-                  />
-                  <button type="button" onClick={() => setShowNewPwd((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[--color-ink-400]">
-                    {showNewPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordModal(false)}
-                  className="h-10 px-4 rounded-full bg-white border border-[--color-line] text-[13px] font-medium text-[--color-ink-700] hover:bg-[--color-cream-100]"
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={passwordSaving}
-                  className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)] disabled:opacity-50"
-                >
-                  {passwordSaving ? '保存中…' : '确认修改'}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* ========== Email Modal ========== */}
       {showEmailModal && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[16px] font-bold text-[--color-ink-900] flex items-center gap-2">
-                <Mail className="w-5 h-5 text-[--color-camphor-500]" /> 修改邮箱
-              </h3>
-              <button onClick={() => setShowEmailModal(false)} className="w-8 h-8 rounded-full hover:bg-[--color-cream-100] grid place-items-center text-[--color-ink-500]">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <form onSubmit={handleChangeEmail} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">新邮箱</label>
-                <input
-                  type="email"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="your@mail.sysu.edu.cn"
-                  className="w-full h-10 px-4 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
-                />
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 backdrop-blur-sm animate-fade-up p-4">
+            <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-[var(--shadow-lg)] border border-[--color-line]">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-[16px] font-bold text-[--color-ink-900] flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-[--color-camphor-500]" /> 修改邮箱
+                </h3>
+                <button onClick={() => setShowEmailModal(false)} className="w-8 h-8 rounded-full hover:bg-[--color-cream-100] grid place-items-center text-[--color-ink-500]">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <div>
-                <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">验证码</label>
-                <div className="flex gap-2">
+              <form onSubmit={handleChangeEmail} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">新邮箱</label>
                   <input
-                    type="text"
-                    value={emailCode}
-                    onChange={(e) => setEmailCode(e.target.value)}
-                    placeholder="6 位验证码"
-                    maxLength={6}
-                    className="flex-1 h-10 px-4 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="your@mail.sysu.edu.cn"
+                    className="w-full h-10 px-4 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
                   />
+                </div>
+                <div>
+                  <label className="block text-[12.5px] font-semibold text-[--color-ink-700] mb-1.5">验证码</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={emailCode}
+                      onChange={(e) => setEmailCode(e.target.value)}
+                      placeholder="6 位验证码"
+                      maxLength={6}
+                      className="flex-1 h-10 px-4 bg-[--color-cream-50] border border-[--color-line] rounded-full text-[13.5px] focus:bg-white focus:border-[--color-camphor-300] focus:ring-4 focus:ring-[--color-camphor-100] transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSendEmailCode}
+                      disabled={emailCountdown > 0}
+                      className="h-10 px-4 rounded-full text-[13px] font-semibold bg-[--color-camphor-500] text-white hover:bg-[--color-camphor-600] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                    >
+                      {emailCountdown > 0 ? `${emailCountdown}s` : '发送验证码'}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-1">
                   <button
                     type="button"
-                    onClick={handleSendEmailCode}
-                    disabled={emailCountdown > 0}
-                    className="h-10 px-4 rounded-full text-[13px] font-semibold bg-[--color-camphor-500] text-white hover:bg-[--color-camphor-600] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+                    onClick={() => setShowEmailModal(false)}
+                    className="h-10 px-4 rounded-full bg-white border border-[--color-line] text-[13px] font-medium text-[--color-ink-700] hover:bg-[--color-cream-100]"
                   >
-                    {emailCountdown > 0 ? `${emailCountdown}s` : '发送验证码'}
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={emailSaving}
+                    className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)] disabled:opacity-50"
+                  >
+                    {emailSaving ? '保存中…' : '确认修改'}
                   </button>
                 </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(false)}
-                  className="h-10 px-4 rounded-full bg-white border border-[--color-line] text-[13px] font-medium text-[--color-ink-700] hover:bg-[--color-cream-100]"
-                >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={emailSaving}
-                  className="h-10 px-5 rounded-full bg-[--color-camphor-500] hover:bg-[--color-camphor-600] text-white text-[13px] font-semibold shadow-[0_8px_18px_-8px_rgba(45,106,79,0.5)] disabled:opacity-50"
-                >
-                  {emailSaving ? '保存中…' : '确认修改'}
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
-          <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[--color-ink-900] text-white text-[13px] font-medium shadow-[var(--shadow-lg)]">
-            <CheckCircle className="w-4 h-4 text-[--color-camphor-300]" />
-            {toast}
+        <ModalPortal>
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
+            <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[--color-ink-900] text-white text-[13px] font-medium shadow-[var(--shadow-lg)]">
+              <CheckCircle className="w-4 h-4 text-[--color-camphor-300]" />
+              {toast}
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
     </div>
   )

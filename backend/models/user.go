@@ -28,7 +28,8 @@ type LoginRequest struct {
 }
 
 type SendCodeRequest struct {
-	Email string `json:"email" binding:"required,email"`
+	Email   string `json:"email" binding:"required,email"`
+	Purpose string `json:"purpose"`
 }
 
 type UpdateProfileRequest struct {

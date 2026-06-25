@@ -10,6 +10,7 @@ import ResourceCard from '../components/ResourceCard'
 import SectionHeading, { ViewAllLink } from '../components/SectionHeading'
 import Mascot from '../components/Mascot'
 import QuotaModal from '../components/QuotaModal'
+import DownloadShareModal from '../components/DownloadShareModal'
 import { EmptyState, LoadingBubble, LoadingShimmer } from '../components/States'
 import {
   greet, timeAgo, formatSize, avatarLetter, avatarColor, categoryMeta,
@@ -44,7 +45,7 @@ export default function Home() {
       const safe = (p) => p.catch(() => null)
       const [pkgs, recent, exams, mats, dls, ups, thx] = await Promise.all([
         safe(api.listPackages({ page_size: 8, sort_by: 'download_count' })),
-        safe(api.listMaterials({ page_size: 6, sort_by: 'created_at' })),
+        safe(api.listMaterials({ page_size: 20, sort_by: 'created_at' })),
         safe(api.listMaterials({ category: 'past_exam', page_size: 1 })),
         safe(api.listMaterials({ category: 'study_material', page_size: 1 })),
         safe(api.getTotalDownloads()),
@@ -75,7 +76,7 @@ export default function Home() {
         if (!seen.has(name)) seen.set(name, { name, count: 0, latest: p.created_at })
         seen.get(name).count += 1
       })
-      setContributors(Array.from(seen.values()).slice(0, 8))
+      setContributors(Array.from(seen.values()).slice(0, 12))
       setLoading(false)
     }
     loadData()
@@ -84,14 +85,14 @@ export default function Home() {
 
   const handleSearch = (e) => {
     e.preventDefault()
-    if (search.trim()) navigate(`/past-exams?search=${encodeURIComponent(search.trim())}`)
+    if (search.trim()) navigate(`/search?q=${encodeURIComponent(search.trim())}`)
   }
 
   /* ========================================================
    *  Hero
    * ======================================================== */
   return (
-    <div className="flex flex-col gap-12 md:gap-16 animate-fade-up">
+    <div className="flex flex-col gap-12 md:gap-16">
       <section className="relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* 左侧 文案 */}
@@ -451,6 +452,9 @@ function PackageCard({ pkg, index }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [showQuotaModal, setShowQuotaModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareRemaining, setShareRemaining] = useState(0)
+  const [downloading, setDownloading] = useState(false)
 
   const tones = ['honey', 'camphor', 'kapok', 'mist']
   const tone = tones[index % tones.length]
@@ -464,12 +468,14 @@ function PackageCard({ pkg, index }) {
   const handleDownload = async (e) => {
     e.preventDefault()
     e.stopPropagation()
+    if (downloading) return
 
     if (!isLoggedIn()) {
       navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
       return
     }
 
+    setDownloading(true)
     try {
       const quota = await api.getMyQuota()
       if (quota.remaining <= 0) {
@@ -478,6 +484,8 @@ function PackageCard({ pkg, index }) {
       }
       const url = api.downloadPackage(pkg.id)
       triggerDownload(url, pkg.file_name)
+      setShareRemaining(Math.max(0, quota.remaining - 1))
+      setShowShareModal(true)
     } catch (err) {
       if (err.status === 401 || err.message === 'unauthorized') {
         localStorage.removeItem('token')
@@ -486,6 +494,8 @@ function PackageCard({ pkg, index }) {
       } else {
         console.error(err)
       }
+    } finally {
+      setTimeout(() => setDownloading(false), 2000)
     }
   }
 
@@ -516,9 +526,10 @@ function PackageCard({ pkg, index }) {
             <button
               type="button"
               onClick={handleDownload}
-              className="pointer-events-auto inline-flex items-center gap-1 font-semibold hover:gap-1.5 transition-all"
+              disabled={downloading}
+              className="pointer-events-auto inline-flex items-center gap-1 font-semibold hover:gap-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              收下 <ArrowRight className="w-3.5 h-3.5" />
+              {downloading ? '下载中…' : <>收下 <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
           </div>
         </div>
@@ -528,6 +539,12 @@ function PackageCard({ pkg, index }) {
         <QuotaModal
           onClose={() => setShowQuotaModal(false)}
           onNavigateUpload={() => navigate('/upload')}
+        />
+      )}
+      {showShareModal && (
+        <DownloadShareModal
+          onClose={() => setShowShareModal(false)}
+          remaining={shareRemaining}
         />
       )}
     </>

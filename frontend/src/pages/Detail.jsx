@@ -10,6 +10,7 @@ import ResourceCard from '../components/ResourceCard'
 import SectionHeading from '../components/SectionHeading'
 import ThankButton from '../components/ThankButton'
 import QuotaModal from '../components/QuotaModal'
+import DownloadShareModal from '../components/DownloadShareModal'
 import {
   timeAgo, formatDate, formatSize, avatarLetter, avatarColor,
   categoryMeta, subCategoryMeta,
@@ -179,6 +180,9 @@ export default function Detail({ isPackage }) {
   const [error, setError] = useState(null)
   const [previewItem, setPreviewItem] = useState(null)
   const [showQuotaModal, setShowQuotaModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareRemaining, setShareRemaining] = useState(0)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -205,13 +209,14 @@ export default function Detail({ isPackage }) {
   }, [id, isPackage])
 
   const handleDownload = async () => {
-    if (!data) return
+    if (!data || downloading) return
 
     if (!isLoggedIn()) {
       navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
       return
     }
 
+    setDownloading(true)
     try {
       const quota = await api.getMyQuota()
       if (quota.remaining <= 0) {
@@ -220,6 +225,8 @@ export default function Detail({ isPackage }) {
       }
       const url = isPackage ? api.downloadPackage(data.id) : api.downloadMaterial(data.id)
       triggerDownload(url, data.file_name)
+      setShareRemaining(Math.max(0, quota.remaining - 1))
+      setShowShareModal(true)
     } catch (err) {
       if (err.status === 401 || err.message === 'unauthorized') {
         localStorage.removeItem('token')
@@ -228,6 +235,8 @@ export default function Detail({ isPackage }) {
       } else {
         console.error(err)
       }
+    } finally {
+      setTimeout(() => setDownloading(false), 2000)
     }
   }
 
@@ -235,7 +244,7 @@ export default function Detail({ isPackage }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 animate-fade-up">
+      <div className="flex flex-col gap-6">
         <div className="h-[200px] rounded-3xl shimmer-bar opacity-70" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <div className="lg:col-span-8 h-[480px] rounded-3xl shimmer-bar opacity-70" />
@@ -277,7 +286,7 @@ export default function Detail({ isPackage }) {
       : { bg: 'from-[#EEF6F0] to-[#D6E9DA]', kicker: 'text-[--color-camphor-700]', emoji: '✍️' }
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 animate-fade-up">
+    <div className="flex flex-col gap-6 md:gap-8">
       {/* ============== 面包屑 ============== */}
       <nav className="flex items-center gap-2 text-[12.5px] text-[--color-ink-500]">
         <button onClick={() => navigate('/')} className="hover:text-[--color-camphor-700] transition-colors">首页</button>
@@ -399,10 +408,11 @@ export default function Detail({ isPackage }) {
             <>
               <button
                 onClick={handleDownload}
-                className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                disabled={downloading}
+                className="w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-gradient-to-r from-[--color-honey-400] to-[--color-kapok-400] text-white text-[14px] font-bold shadow-[0_14px_28px_-12px_rgba(244,125,44,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <Download className="w-4 h-4" />
-                收下{isPackage ? '整个资源包' : '这份资料'}
+                {downloading ? '下载中…' : `收下${isPackage ? '整个资源包' : '这份资料'}`}
               </button>
               <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
                 {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
@@ -504,6 +514,12 @@ export default function Detail({ isPackage }) {
         <QuotaModal
           onClose={() => setShowQuotaModal(false)}
           onNavigateUpload={() => navigate('/upload')}
+        />
+      )}
+      {showShareModal && (
+        <DownloadShareModal
+          onClose={() => setShowShareModal(false)}
+          remaining={shareRemaining}
         />
       )}
     </div>

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
@@ -47,6 +48,25 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 		return
 	}
 
+	// Check email registration status according to purpose
+	existingUser, err := h.userStore.GetByEmail(req.Email)
+	if req.Purpose == "login" {
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "该邮箱未注册"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "query failed"})
+			return
+		}
+	} else {
+		// default/register: do not send code if already registered
+		if err == nil && existingUser != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "该邮箱已注册"})
+			return
+		}
+	}
+
 	// Rate limit: max 10 per day per email
 	count, err := h.emailStore.CountToday(req.Email)
 	if err != nil {
@@ -74,7 +94,7 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 		return
 	}
 
-	if err := h.mailSender.SendVerificationCode(req.Email, code); err != nil {
+	if err := h.mailSender.SendVerificationCode(req.Email, code, req.Purpose); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send email: " + err.Error()})
 		return
 	}
@@ -167,14 +187,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	user, err := h.userStore.GetByEmail(req.Email)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "该邮箱未注册"})
+			return
+		}
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "查询用户失败"})
 		return
 	}
 
 	// Password login
 	if req.Password != "" {
 		if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
 			return
 		}
 	} else if req.Code != "" {

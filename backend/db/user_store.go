@@ -93,3 +93,59 @@ func (s *UserStore) SetInviteCode(id int64, code string) error {
 	_, err := DB.Exec(`UPDATE users SET invite_code = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, code, id)
 	return err
 }
+
+type UserOverviewStats struct {
+	TotalUsers      int64 `json:"total_users"`
+	NewUsersToday   int64 `json:"new_users_today"`
+	NewUsersWeek    int64 `json:"new_users_this_week"`
+	InvitedUsers    int64 `json:"invited_users"`
+}
+
+func (s *UserStore) GetOverviewStats() (*UserOverviewStats, error) {
+	stats := &UserOverviewStats{}
+	queries := []struct {
+		sql string
+		dest *int64
+	}{
+		{"SELECT COUNT(*) FROM users", &stats.TotalUsers},
+		{"SELECT COUNT(*) FROM users WHERE date(created_at) = date('now')", &stats.NewUsersToday},
+		{"SELECT COUNT(*) FROM users WHERE created_at >= datetime('now', '-7 days')", &stats.NewUsersWeek},
+		{"SELECT COUNT(*) FROM users WHERE invited_by IS NOT NULL", &stats.InvitedUsers},
+	}
+	for _, q := range queries {
+		if err := DB.QueryRow(q.sql).Scan(q.dest); err != nil {
+			return nil, err
+		}
+	}
+	return stats, nil
+}
+
+type InviterRank struct {
+	InviterID    int64  `json:"inviter_id"`
+	InviterEmail string `json:"inviter_email"`
+	InviteCount  int64  `json:"invite_count"`
+}
+
+func (s *UserStore) GetTopInviters(limit int) ([]InviterRank, error) {
+	rows, err := DB.Query(`
+		SELECT u.id, u.email, COUNT(*) as invite_count
+		FROM users u
+		JOIN users i ON i.invited_by = u.id
+		GROUP BY u.id
+		ORDER BY invite_count DESC, u.email ASC
+		LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := []InviterRank{}
+	for rows.Next() {
+		var item InviterRank
+		if err := rows.Scan(&item.InviterID, &item.InviterEmail, &item.InviteCount); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
