@@ -3,7 +3,7 @@ import { X, Copy, Check, Upload, Sparkles, Link2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ModalPortal from './ModalPortal'
 
-export default function DownloadShareModal({ onClose, remaining = 0 }) {
+export default function DownloadShareModal({ onClose, remaining = 0, deducted = true }) {
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
 
@@ -87,7 +87,9 @@ export default function DownloadShareModal({ onClose, remaining = 0 }) {
               <Sparkles className="w-4 h-4 text-[--color-honey-500]" />
             </div>
             <div>
-              <p className="text-[13px] font-semibold text-[--color-ink-900]">本次消耗 1 次下载额度</p>
+              <p className="text-[13px] font-semibold text-[--color-ink-900]">
+                {deducted ? '本次消耗 1 次下载额度' : '已下载过该资料，本次不消耗额度'}
+              </p>
               <p className="text-[12px] text-[--color-ink-500]">本周还剩 <span className="font-semibold text-[--color-camphor-700]">{remaining}</span> 次</p>
             </div>
           </div>

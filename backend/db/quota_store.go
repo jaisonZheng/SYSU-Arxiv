@@ -6,9 +6,43 @@ import (
 	"sysu-arxiv/models"
 )
 
+// 期末限定活动：2026-06-28 00:00 ~ 2026-07-05 23:59（北京时间）
+// 活动期间，每个同学本周下载额度至少提升到 10 次。
+var (
+	cst            = time.FixedZone("CST", 8*60*60)
+	finalWeekStart = time.Date(2026, 6, 28, 0, 0, 0, 0, cst)
+	finalWeekEnd   = time.Date(2026, 7, 6, 0, 0, 0, 0, cst) // 开区间
+	finalWeekMin   = int64(10)
+)
+
 type QuotaStore struct{}
 
 func NewQuotaStore() *QuotaStore { return &QuotaStore{} }
+
+// isFinalWeekActive 判断当前时间是否在期末限定活动期间。
+func (s *QuotaStore) isFinalWeekActive() bool {
+	now := time.Now().In(cst)
+	return !now.Before(finalWeekStart) && now.Before(finalWeekEnd)
+}
+
+// boostQuotaIfNeeded 在活动期间将额度补齐到至少 10 次。
+func (s *QuotaStore) boostQuotaIfNeeded(q *models.DownloadQuota) error {
+	if !s.isFinalWeekActive() {
+		return nil
+	}
+	if q.TotalQuota >= finalWeekMin {
+		return nil
+	}
+	_, err := DB.Exec(
+		`UPDATE download_quota SET total_quota = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+		finalWeekMin, q.ID,
+	)
+	if err != nil {
+		return err
+	}
+	q.TotalQuota = finalWeekMin
+	return nil
+}
 
 // CurrentWeekStart calculates the user's current cycle start: createdAt + n*7 days
 func (s *QuotaStore) CurrentWeekStart(createdAt time.Time) time.Time {
@@ -29,12 +63,17 @@ func (s *QuotaStore) GetOrCreateQuota(userID int64, weekStart time.Time) (*model
 		userID, weekStart,
 	).Scan(&q.ID, &q.UserID, &q.WeekStart, &q.TotalQuota, &q.UsedQuota, &q.CreatedAt, &q.UpdatedAt)
 	if err == nil {
+		_ = s.boostQuotaIfNeeded(q)
 		return q, nil
 	}
 	// Create new quota
+	totalQuota := int64(3)
+	if s.isFinalWeekActive() {
+		totalQuota = finalWeekMin
+	}
 	result, err := DB.Exec(
-		`INSERT INTO download_quota (user_id, week_start, total_quota, used_quota) VALUES (?, ?, 3, 0)`,
-		userID, weekStart,
+		`INSERT INTO download_quota (user_id, week_start, total_quota, used_quota) VALUES (?, ?, ?, 0)`,
+		userID, weekStart, totalQuota,
 	)
 	if err != nil {
 		return nil, err
@@ -43,7 +82,7 @@ func (s *QuotaStore) GetOrCreateQuota(userID int64, weekStart time.Time) (*model
 	q.ID = id
 	q.UserID = userID
 	q.WeekStart = weekStart
-	q.TotalQuota = 3
+	q.TotalQuota = totalQuota
 	q.UsedQuota = 0
 	return q, nil
 }

@@ -62,6 +62,7 @@ func (h *MaterialHandler) RegisterRoutes(r *gin.Engine) {
 	auth.Use(middleware.AuthRequired())
 	{
 		auth.GET("/materials/:id/download", h.DownloadMaterial)
+		auth.GET("/materials/:id/download-status", h.DownloadMaterialStatus)
 	}
 
 	// Upload can be anonymous
@@ -256,6 +257,54 @@ func (h *MaterialHandler) CreateMaterial(c *gin.Context) {
 	})
 }
 
+func (h *MaterialHandler) DownloadMaterialStatus(c *gin.Context) {
+	userID := c.GetInt64("userID")
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if _, err := h.store.GetByID(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "material not found"})
+		return
+	}
+
+	user, err := db.NewUserStore().GetByID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
+		return
+	}
+	weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)
+	quota, err := h.quotaStore.GetOrCreateQuota(userID, weekStart)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get quota"})
+		return
+	}
+
+	alreadyDownloaded := false
+	if h.recordStore != nil {
+		alreadyDownloaded, err = h.recordStore.HasDownloadedRecord(userID, id, "material")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check download record"})
+			return
+		}
+	}
+
+	remaining := quota.TotalQuota - quota.UsedQuota
+	if remaining < 0 {
+		remaining = 0
+	}
+	canDownload := alreadyDownloaded || remaining > 0
+
+	c.JSON(http.StatusOK, gin.H{
+		"already_downloaded": alreadyDownloaded,
+		"remaining_quota":    remaining,
+		"can_download":       canDownload,
+	})
+}
+
 func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 	userID := c.GetInt64("userID")
 
@@ -276,8 +325,18 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		return
 	}
 
-	// Check quota
-	if h.quotaStore != nil {
+	// Check if already downloaded; if so, serve without deducting quota or recording.
+	alreadyDownloaded := false
+	if h.recordStore != nil {
+		alreadyDownloaded, err = h.recordStore.HasDownloadedRecord(userID, id, "material")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check download record"})
+			return
+		}
+	}
+
+	// Check quota only for first-time downloads
+	if !alreadyDownloaded && h.quotaStore != nil {
 		user, err := db.NewUserStore().GetByID(userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
@@ -299,13 +358,14 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		}
 	}
 
-	// Record download
-	if h.recordStore != nil {
-		h.recordStore.CreateDownloadRecord(userID, id, "material")
+	// Record download only for first-time downloads
+	if !alreadyDownloaded {
+		if h.recordStore != nil {
+			h.recordStore.CreateDownloadRecord(userID, id, "material")
+		}
+		h.store.IncrementDownloadCount(id)
+		db.IncrementSiteStat("total_downloads")
 	}
-
-	h.store.IncrementDownloadCount(id)
-	db.IncrementSiteStat("total_downloads")
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", m.FileName))
 	c.Header("Content-Type", m.MimeType.String)

@@ -555,7 +555,7 @@ export default function UploadPage() {
           <p className="text-[11.5px] text-[--color-ink-400] mt-2">
             文件添加后会自动上传到临时空间，填写完资料信息后点击正式上传按钮提交 🎁
           </p>
-          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.jpg,.jpeg,.png,.zip,.rar,.7z" />
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.jpg,.jpeg,.png,.zip,.rar,.7z" />
         </div>
 
         {/* 已选文件列表 */}

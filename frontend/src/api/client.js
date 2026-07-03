@@ -100,6 +100,8 @@ export const api = {
     return getDownloadUrl(url);
   },
 
+  getMaterialDownloadStatus: (id) => fetchJSON(`/api/materials/${id}/download-status`),
+
   checkDuplicate: (filename) => fetchJSON(`/api/materials/check-duplicate?filename=${encodeURIComponent(filename)}`),
 
   getDepartments: () => fetchJSON('/api/departments'),
@@ -123,6 +125,8 @@ export const api = {
     const url = `${API_BASE}/api/packages/${id}/download`;
     return getDownloadUrl(url);
   },
+
+  getPackageDownloadStatus: (id) => fetchJSON(`/api/packages/${id}/download-status`),
 
   previewPackageItem: (id, path) => `${API_BASE}/api/packages/${id}/preview/${encodeURIComponent(path)}`,
 

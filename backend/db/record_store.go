@@ -19,6 +19,18 @@ func (s *RecordStore) CreateDownloadRecord(userID, resourceID int64, resourceTyp
 	return err
 }
 
+func (s *RecordStore) HasDownloadedRecord(userID, resourceID int64, resourceType string) (bool, error) {
+	var exists bool
+	err := DB.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM download_records WHERE user_id = ? AND resource_id = ? AND resource_type = ?)`,
+		userID, resourceID, resourceType,
+	).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func (s *RecordStore) ListDownloadsByUser(userID int64) ([]models.DownloadRecord, error) {
 	rows, err := DB.Query(
 		`SELECT id, user_id, resource_id, resource_type, created_at FROM download_records WHERE user_id = ? ORDER BY created_at DESC`,

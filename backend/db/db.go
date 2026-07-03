@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -144,6 +145,7 @@ func runMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_users_invite_code ON users(invite_code)`,
 		`CREATE INDEX IF NOT EXISTS idx_quota_user_week ON download_quota(user_id, week_start)`,
 		`CREATE INDEX IF NOT EXISTS idx_download_records_user ON download_records(user_id, created_at)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_download_records_user_resource ON download_records(user_id, resource_id, resource_type)`,
 		`CREATE INDEX IF NOT EXISTS idx_upload_records_user ON upload_records(user_id, created_at)`,
 		// Admin monitor: search logs
 		`CREATE TABLE IF NOT EXISTS search_logs (
@@ -158,6 +160,20 @@ func runMigrations(db *sql.DB) error {
 	}
 
 	for i, m := range migrations {
+		// Before adding the unique index, deduplicate any existing repeat downloads
+		// so the migration doesn't fail on pre-existing duplicates.
+		if strings.Contains(m, "idx_download_records_user_resource") {
+			if _, err := db.Exec(`
+				DELETE FROM download_records
+				WHERE id NOT IN (
+					SELECT MIN(id)
+					FROM download_records
+					GROUP BY user_id, resource_id, resource_type
+				)
+			`); err != nil {
+				return fmt.Errorf("failed to deduplicate download_records: %w", err)
+			}
+		}
 		if _, err := db.Exec(m); err != nil {
 			return fmt.Errorf("migration %d failed: %w", i, err)
 		}

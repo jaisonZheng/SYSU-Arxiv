@@ -454,6 +454,7 @@ function PackageCard({ pkg, index }) {
   const [showQuotaModal, setShowQuotaModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareRemaining, setShareRemaining] = useState(0)
+  const [shareDeducted, setShareDeducted] = useState(true)
   const [downloading, setDownloading] = useState(false)
 
   const tones = ['honey', 'camphor', 'kapok', 'mist']
@@ -477,14 +478,17 @@ function PackageCard({ pkg, index }) {
 
     setDownloading(true)
     try {
-      const quota = await api.getMyQuota()
-      if (quota.remaining <= 0) {
+      const status = await api.getPackageDownloadStatus(pkg.id)
+      if (!status.can_download) {
         setShowQuotaModal(true)
         return
       }
       const url = api.downloadPackage(pkg.id)
       triggerDownload(url, pkg.file_name)
-      setShareRemaining(Math.max(0, quota.remaining - 1))
+      setShareDeducted(!status.already_downloaded)
+      setShareRemaining(status.already_downloaded
+        ? status.remaining_quota
+        : Math.max(0, status.remaining_quota - 1))
       setShowShareModal(true)
     } catch (err) {
       if (err.status === 401 || err.message === 'unauthorized') {
@@ -545,6 +549,7 @@ function PackageCard({ pkg, index }) {
         <DownloadShareModal
           onClose={() => setShowShareModal(false)}
           remaining={shareRemaining}
+          deducted={shareDeducted}
         />
       )}
     </>

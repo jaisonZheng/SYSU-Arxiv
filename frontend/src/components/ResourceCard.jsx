@@ -38,6 +38,7 @@ export default function ResourceCard({ material }) {
   const [showQuotaModal, setShowQuotaModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareRemaining, setShareRemaining] = useState(0)
+  const [shareDeducted, setShareDeducted] = useState(true)
   const [downloading, setDownloading] = useState(false)
 
   const cat  = categoryMeta[material.category] || { label: material.category, emoji: '📚' }
@@ -57,14 +58,17 @@ export default function ResourceCard({ material }) {
 
     setDownloading(true)
     try {
-      const quota = await api.getMyQuota()
-      if (quota.remaining <= 0) {
+      const status = await api.getMaterialDownloadStatus(material.id)
+      if (!status.can_download) {
         setShowQuotaModal(true)
         return
       }
       const url = api.downloadMaterial(material.id)
       triggerDownload(url, material.file_name)
-      setShareRemaining(Math.max(0, quota.remaining - 1))
+      setShareDeducted(!status.already_downloaded)
+      setShareRemaining(status.already_downloaded
+        ? status.remaining_quota
+        : Math.max(0, status.remaining_quota - 1))
       setShowShareModal(true)
     } catch (err) {
       if (err.status === 401 || err.message === 'unauthorized') {
@@ -172,6 +176,7 @@ export default function ResourceCard({ material }) {
         <DownloadShareModal
           onClose={() => setShowShareModal(false)}
           remaining={shareRemaining}
+          deducted={shareDeducted}
         />
       )}
     </>

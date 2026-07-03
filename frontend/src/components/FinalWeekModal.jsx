@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { X, Copy, Check, Upload, Sparkles } from 'lucide-react'
+import { X, Copy, Check, Upload } from 'lucide-react'
 import ModalPortal from './ModalPortal'
 
-export default function QuotaModal({ onClose, onNavigateUpload }) {
+export default function FinalWeekModal({ onClose, onNavigateUpload }) {
   const [copied, setCopied] = useState(false)
 
   const handleCopyInvite = async () => {
@@ -17,7 +17,6 @@ export default function QuotaModal({ onClose, onNavigateUpload }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback
       const ta = document.createElement('textarea')
       ta.value = text
       document.body.appendChild(ta)
@@ -46,7 +45,7 @@ export default function QuotaModal({ onClose, onNavigateUpload }) {
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-3xl border border-[--color-line] shadow-[var(--shadow-lg)] max-w-[420px] w-full p-6 md:p-7 animate-fade-up">
+        <div className="relative bg-white rounded-3xl border border-[--color-line] shadow-[var(--shadow-lg)] max-w-[440px] w-full p-6 md:p-7 animate-fade-up">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -56,32 +55,32 @@ export default function QuotaModal({ onClose, onNavigateUpload }) {
           </button>
 
           {/* Icon */}
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[--color-honey-200] to-[--color-kapok-200] grid place-items-center text-2xl mb-4">
-            🌙
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[--color-camphor-200] to-[--color-honey-200] grid place-items-center text-2xl mb-4">
+            📚
           </div>
 
           {/* Title */}
-          <h3 className="text-[18px] font-bold text-[--color-ink-900] mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-            本周免费额度已用完
+          <h3
+            className="text-[18px] font-bold text-[--color-ink-900] mb-3"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            期末周限定福利
           </h3>
 
           {/* Description */}
-          <p className="text-[13.5px] text-[--color-ink-500] leading-relaxed mb-5">
-            每个同学每周有 3 次免费下载机会。
-            <br />
-            你可以：
-          </p>
-
-          <ol className="space-y-3 mb-6">
-            <li className="flex items-start gap-3 text-[13.5px] text-[--color-ink-700]">
-              <span className="w-6 h-6 rounded-full bg-[--color-honey-100] text-[--color-honey-700] text-[12px] font-bold grid place-items-center shrink-0 mt-0.5">1</span>
-              <span>邀请一位新同学注册，双方本周各 <strong className="text-[--color-honey-700]">+3 次</strong> 额度；</span>
-            </li>
-            <li className="flex items-start gap-3 text-[13.5px] text-[--color-ink-700]">
-              <span className="w-6 h-6 rounded-full bg-[--color-camphor-100] text-[--color-camphor-700] text-[12px] font-bold grid place-items-center shrink-0 mt-0.5">2</span>
-              <span>上传一份资料/课程包/经验攻略，本周 <strong className="text-[--color-camphor-700]">+3 次</strong> 额度。</span>
-            </li>
-          </ol>
+          <div className="text-[13.5px] text-[--color-ink-600] leading-relaxed mb-5 space-y-3">
+            <p>
+              限额机制本意是希望大家多多邀请同学，或者上传资料让社区更丰富；
+              但到期末周，大家的下载需求一下子变多了。
+            </p>
+            <p className="text-[--color-ink-900] font-medium">
+              所以本周（6 月 28 日 - 7 月 5 日），你的下载额度已自动提升为至少{' '}
+              <span className="text-[--color-honey-700]">10 次</span>！
+            </p>
+            <p>
+              也欢迎大家继续邀请自己的同学、朋友来用，或者上传一份资料，让「破壁计划」变得更实用～
+            </p>
+          </div>
 
           {/* Actions */}
           <div className="flex flex-col gap-2.5">
@@ -114,7 +113,7 @@ export default function QuotaModal({ onClose, onNavigateUpload }) {
               onClick={onClose}
               className="w-full inline-flex items-center justify-center gap-2 h-10 text-[13px] text-[--color-ink-400] hover:text-[--color-ink-600] transition-colors"
             >
-              稍后再说
+              知道了
             </button>
           </div>
         </div>

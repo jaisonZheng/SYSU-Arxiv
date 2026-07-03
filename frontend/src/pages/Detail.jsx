@@ -182,6 +182,7 @@ export default function Detail({ isPackage }) {
   const [showQuotaModal, setShowQuotaModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareRemaining, setShareRemaining] = useState(0)
+  const [shareDeducted, setShareDeducted] = useState(true)
   const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
@@ -218,14 +219,19 @@ export default function Detail({ isPackage }) {
 
     setDownloading(true)
     try {
-      const quota = await api.getMyQuota()
-      if (quota.remaining <= 0) {
+      const status = isPackage
+        ? await api.getPackageDownloadStatus(data.id)
+        : await api.getMaterialDownloadStatus(data.id)
+      if (!status.can_download) {
         setShowQuotaModal(true)
         return
       }
       const url = isPackage ? api.downloadPackage(data.id) : api.downloadMaterial(data.id)
       triggerDownload(url, data.file_name)
-      setShareRemaining(Math.max(0, quota.remaining - 1))
+      setShareDeducted(!status.already_downloaded)
+      setShareRemaining(status.already_downloaded
+        ? status.remaining_quota
+        : Math.max(0, status.remaining_quota - 1))
       setShowShareModal(true)
     } catch (err) {
       if (err.status === 401 || err.message === 'unauthorized') {
@@ -520,6 +526,7 @@ export default function Detail({ isPackage }) {
         <DownloadShareModal
           onClose={() => setShowShareModal(false)}
           remaining={shareRemaining}
+          deducted={shareDeducted}
         />
       )}
     </div>
