@@ -8,16 +8,26 @@ import (
 	"mime/multipart"
 	"net/smtp"
 	"net/textproto"
+	"os"
 	"time"
 )
 
 const (
-	smtpHost     = "smtp.163.com"
-	smtpAddr     = "smtp.163.com:587"
-	smtpAddrAlt  = "smtp.163.com:25"
-	smtpUsername = "pobiplan@163.com"
-	smtpPassword = "JHy9k5hguq3CS7Fz"
+	smtpHost    = "smtp.163.com"
+	smtpAddr    = "smtp.163.com:587"
+	smtpAddrAlt = "smtp.163.com:25"
 )
+
+func smtpUsername() string {
+	if u := os.Getenv("SMTP_USERNAME"); u != "" {
+		return u
+	}
+	return "pobiplan@163.com"
+}
+
+func smtpPassword() string {
+	return os.Getenv("SMTP_PASSWORD")
+}
 
 // 破壁计划设计系统 · 与前端主站统一
 const (
@@ -43,7 +53,12 @@ func NewSender() *Sender { return &Sender{} }
 
 func (s *Sender) SendVerificationCode(email, code, purpose string) error {
 	msg := buildVerificationEmail(email, code, purpose)
-	auth := smtp.PlainAuth("", smtpUsername, smtpPassword, smtpHost)
+	user := smtpUsername()
+	pass := smtpPassword()
+	if pass == "" {
+		return fmt.Errorf("SMTP_PASSWORD not set")
+	}
+	auth := smtp.PlainAuth("", user, pass, smtpHost)
 
 	// Try STARTTLS on 587 first
 	err := s.sendWithSTARTTLS(email, msg, auth)
@@ -134,7 +149,7 @@ func buildVerificationEmail(to, code, purpose string) []byte {
 
 	header := fmt.Sprintf(
 		"To: %s\r\nFrom: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=%s\r\n\r\n",
-		to, smtpUsername, subject, writer.Boundary(),
+		to, smtpUsername(), subject, writer.Boundary(),
 	)
 
 	plainHeader := textproto.MIMEHeader{}
@@ -211,7 +226,7 @@ func (s *Sender) sendWithSTARTTLS(to string, msg []byte, auth smtp.Auth) error {
 	if err := client.Auth(auth); err != nil {
 		return err
 	}
-	if err := client.Mail(smtpUsername); err != nil {
+	if err := client.Mail(smtpUsername()); err != nil {
 		return err
 	}
 	if err := client.Rcpt(to); err != nil {
@@ -242,7 +257,7 @@ func (s *Sender) sendWithSTARTTLSAlt(to string, msg []byte, auth smtp.Auth) erro
 	if err := client.Auth(auth); err != nil {
 		return err
 	}
-	if err := client.Mail(smtpUsername); err != nil {
+	if err := client.Mail(smtpUsername()); err != nil {
 		return err
 	}
 	if err := client.Rcpt(to); err != nil {
