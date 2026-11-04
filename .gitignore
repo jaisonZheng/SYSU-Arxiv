@@ -30,3 +30,9 @@ CLAUDE.md
 
 # Claude config
 .claude/
+
+# Private runtime credentials
+.env*
+!.env.example
+!.env.*.example
+!RUNTIME_BASELINE.md

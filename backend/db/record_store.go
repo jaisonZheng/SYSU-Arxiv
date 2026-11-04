@@ -31,6 +31,42 @@ func (s *RecordStore) HasDownloadedRecord(userID, resourceID int64, resourceType
 	return exists, nil
 }
 
+func (s *RecordStore) CountDownloadsToday(userID, resourceID int64, resourceType string) (int64, error) {
+	var count int64
+	err := DB.QueryRow(
+		`SELECT COUNT(*) FROM download_records
+		 WHERE user_id = ? AND resource_id = ? AND resource_type = ?
+		 AND date(created_at, '+8 hours') = date('now', '+8 hours')`,
+		userID, resourceID, resourceType,
+	).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (s *RecordStore) CreateDownloadRepeatRecord(userID, resourceID int64, resourceType string) error {
+	_, err := DB.Exec(
+		`INSERT INTO download_repeat_records (user_id, resource_id, resource_type) VALUES (?, ?, ?)`,
+		userID, resourceID, resourceType,
+	)
+	return err
+}
+
+func (s *RecordStore) CountDownloadRepeatsToday(userID, resourceID int64, resourceType string) (int64, error) {
+	var count int64
+	err := DB.QueryRow(
+		`SELECT COUNT(*) FROM download_repeat_records
+		 WHERE user_id = ? AND resource_id = ? AND resource_type = ?
+		 AND date(created_at, '+8 hours') = date('now', '+8 hours')`,
+		userID, resourceID, resourceType,
+	).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (s *RecordStore) ListDownloadsByUser(userID int64) ([]models.DownloadRecord, error) {
 	rows, err := DB.Query(
 		`SELECT id, user_id, resource_id, resource_type, created_at FROM download_records WHERE user_id = ? ORDER BY created_at DESC`,

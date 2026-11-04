@@ -134,6 +134,13 @@ func runMigrations(db *sql.DB) error {
 			resource_type TEXT NOT NULL,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS download_repeat_records (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			resource_id INTEGER NOT NULL,
+			resource_type TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 		`CREATE TABLE IF NOT EXISTS email_verifications (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			email TEXT NOT NULL,
@@ -147,6 +154,7 @@ func runMigrations(db *sql.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_download_records_user ON download_records(user_id, created_at)`,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_download_records_user_resource ON download_records(user_id, resource_id, resource_type)`,
 		`CREATE INDEX IF NOT EXISTS idx_upload_records_user ON upload_records(user_id, created_at)`,
+		`CREATE INDEX IF NOT EXISTS idx_download_repeat_records_lookup ON download_repeat_records(user_id, resource_id, resource_type, created_at)`,
 		// Admin monitor: search logs
 		`CREATE TABLE IF NOT EXISTS search_logs (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,

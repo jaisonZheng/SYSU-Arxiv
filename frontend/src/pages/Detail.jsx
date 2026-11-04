@@ -184,6 +184,12 @@ export default function Detail({ isPackage }) {
   const [shareRemaining, setShareRemaining] = useState(0)
   const [shareDeducted, setShareDeducted] = useState(true)
   const [downloading, setDownloading] = useState(false)
+  const [toast, setToast] = useState('')
+
+  const showToast = (msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 2500)
+  }
 
   useEffect(() => {
     const loadData = async () => {
@@ -238,6 +244,8 @@ export default function Detail({ isPackage }) {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         navigate('/login?redirect=' + encodeURIComponent(location.pathname + location.search))
+      } else if (err.status === 429 || err.message?.includes('daily_repeat_limit_exceeded')) {
+        showToast('同一资料每天最多重复下载 10 次')
       } else {
         console.error(err)
       }
@@ -528,6 +536,13 @@ export default function Detail({ isPackage }) {
           remaining={shareRemaining}
           deducted={shareDeducted}
         />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-[--color-ink-900] text-white text-[13px] font-medium shadow-lg">
+          {toast}
+        </div>
       )}
     </div>
   )

@@ -292,16 +292,31 @@ func (h *MaterialHandler) DownloadMaterialStatus(c *gin.Context) {
 		}
 	}
 
+	dailyRepeatRemaining := 10
+	if h.recordStore != nil {
+		count, err := h.recordStore.CountDownloadRepeatsToday(userID, id, "material")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check daily repeat count"})
+			return
+		}
+		if count < 10 {
+			dailyRepeatRemaining = int(10 - count)
+		} else {
+			dailyRepeatRemaining = 0
+		}
+	}
+
 	remaining := quota.TotalQuota - quota.UsedQuota
 	if remaining < 0 {
 		remaining = 0
 	}
-	canDownload := alreadyDownloaded || remaining > 0
+	canDownload := dailyRepeatRemaining > 0 || remaining > 0
 
 	c.JSON(http.StatusOK, gin.H{
-		"already_downloaded": alreadyDownloaded,
-		"remaining_quota":    remaining,
-		"can_download":       canDownload,
+		"already_downloaded":     alreadyDownloaded,
+		"remaining_quota":        remaining,
+		"can_download":           canDownload,
+		"daily_repeat_remaining": dailyRepeatRemaining,
 	})
 }
 
@@ -335,6 +350,19 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		}
 	}
 
+	// Limit repeat downloads to 10 per day per resource
+	if alreadyDownloaded && h.recordStore != nil {
+		count, err := h.recordStore.CountDownloadRepeatsToday(userID, id, "material")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check daily repeat count"})
+			return
+		}
+		if count >= 10 {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "daily_repeat_limit_exceeded", "message": "同一资料每天最多重复下载 10 次"})
+			return
+		}
+	}
+
 	// Check quota only for first-time downloads
 	if !alreadyDownloaded && h.quotaStore != nil {
 		user, err := db.NewUserStore().GetByID(userID)
@@ -358,11 +386,14 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		}
 	}
 
-	// Record download only for first-time downloads
-	if !alreadyDownloaded {
-		if h.recordStore != nil {
+	// Record first-time download and every repeat download for daily limit tracking.
+	if h.recordStore != nil {
+		if !alreadyDownloaded {
 			h.recordStore.CreateDownloadRecord(userID, id, "material")
 		}
+		h.recordStore.CreateDownloadRepeatRecord(userID, id, "material")
+	}
+	if !alreadyDownloaded {
 		h.store.IncrementDownloadCount(id)
 		db.IncrementSiteStat("total_downloads")
 	}
