@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"sysu-arxiv/db"
 	"sysu-arxiv/handlers"
+	"sysu-arxiv/integrations/cramameleon"
 	"sysu-arxiv/middleware"
 	"sysu-arxiv/storage"
 )
@@ -80,6 +81,9 @@ func main() {
 
 	authHandler := handlers.NewAuthHandler(userStore, emailStore, quotaStore)
 	authHandler.RegisterRoutes(r)
+	if err := cramameleon.Register(r, dataPath); err != nil {
+		log.Fatalf("Cramameleon integration configuration: %v", err)
+	}
 
 	userHandler := handlers.NewUserHandler(userStore, quotaStore, recordStore, emailStore, localStorage)
 	userHandler.RegisterRoutes(r)

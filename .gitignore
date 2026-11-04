@@ -36,3 +36,4 @@ CLAUDE.md
 !.env.example
 !.env.*.example
 !RUNTIME_BASELINE.md
+!CRAMAMELEON.md

@@ -6,7 +6,8 @@ import { api } from '../api/client'
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
+  const requestedRedirect = searchParams.get('redirect') || '/'
+  const redirect = requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//') && !requestedRedirect.includes('\\') ? requestedRedirect : '/'
 
   const [mode, setMode] = useState(localStorage.getItem('token') ? 'login' : 'register') // 'login' | 'register'
   const [useCode, setUseCode] = useState(false) // login mode: password vs code

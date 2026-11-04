@@ -13,6 +13,7 @@ import Login from './pages/Login'
 import Profile from './pages/Profile'
 import HotRanking from './pages/HotRanking'
 import Monitor from './pages/Monitor'
+import Cramameleon from './pages/Cramameleon'
 import FinalWeekModal from './components/FinalWeekModal'
 
 const FINAL_WEEK_START = new Date('2026-06-28T00:00:00+08:00')
@@ -56,6 +57,8 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="profile" element={<Profile />} />
           <Route path="monitor" element={<Monitor />} />
+          <Route path="cramameleon" element={<Cramameleon />} />
+          <Route path="integrations/cramameleon/authorize" element={<Cramameleon authorize />} />
         </Route>
       </Routes>
       {showFinalWeek && (

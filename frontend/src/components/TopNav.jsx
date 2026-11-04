@@ -10,6 +10,7 @@ const navItems = [
   { path: '/past-exams',        label: '历年真题' },
   { path: '/study-materials',   label: '学习资料' },
   { path: '/experience',        label: '经验攻略' },
+  { path: '/cramameleon',       label: 'AI 学习' },
   { path: '/help',              label: '关于' },
 ]
 
@@ -93,14 +94,14 @@ export default function TopNav() {
         </Link>
 
         {/* Nav (desktop) */}
-        <nav className="hidden md:flex items-center gap-1 ml-2">
+        <nav className="hidden xl:flex items-center gap-0.5 ml-1 shrink-0">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.end}
               className={({ isActive }) =>
-                `relative px-3.5 py-1.5 rounded-full text-[14px] font-medium transition-colors ${
+                `relative px-2.5 py-1.5 rounded-full text-[14px] whitespace-nowrap font-medium transition-colors ${
                   isActive
                     ? 'text-[--color-camphor-700] bg-[--color-camphor-50]'
                     : 'text-[--color-ink-500] hover:text-[--color-ink-900] hover:bg-[--color-cream-100]'
@@ -113,7 +114,7 @@ export default function TopNav() {
         </nav>
 
         {/* Search (desktop) */}
-        <form onSubmit={handleSearch} className="hidden lg:flex relative items-center flex-1 max-w-[420px] ml-2">
+        <form onSubmit={handleSearch} className="hidden lg:flex relative items-center flex-1 min-w-[130px] max-w-[420px] ml-2">
           <Search className="absolute left-3.5 w-4 h-4 text-[--color-ink-400] pointer-events-none" />
           <input
             type="text"
@@ -177,7 +178,7 @@ export default function TopNav() {
           {/* Mobile toggle */}
           <button
             onClick={() => setOpenMobile((v) => !v)}
-            className="md:hidden grid place-items-center w-9 h-9 rounded-full hover:bg-[--color-cream-100] text-[--color-ink-700]"
+            className="xl:hidden grid place-items-center w-9 h-9 rounded-full hover:bg-[--color-cream-100] text-[--color-ink-700]"
             aria-label="菜单"
           >
             {openMobile ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -187,7 +188,7 @@ export default function TopNav() {
 
       {/* Mobile drawer */}
       {openMobile && (
-        <div className="md:hidden border-t border-[--color-line] bg-[--color-cream-50] animate-fade-up">
+        <div className="xl:hidden border-t border-[--color-line] bg-[--color-cream-50] animate-fade-up">
           <div className="px-4 py-3 space-y-1">
             <form onSubmit={handleSearch} className="relative mb-3">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[--color-ink-400]" />

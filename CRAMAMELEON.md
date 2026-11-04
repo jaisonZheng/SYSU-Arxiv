@@ -1,0 +1,13 @@
+# Cramameleon integration
+
+The running source baseline is recorded in RUNTIME_BASELINE.md. This integration adds `/cramameleon`, an authorization page, and a narrow API under `/api/integrations/cramameleon`. It is disabled unless both CRAMAMELEON_APP_URL and CRAMAMELEON_CLIENT_SECRET are configured. See `.env.cramameleon.example`; use an ignored mode-0600 `.env.cramameleon` file. Never reuse the site's JWT secret.
+
+Authorization uses the existing login, an exact callback address, short single-use codes, S256 PKCE and backend client authentication. Access credentials are opaque, stored hashed, user-bound, revocable and valid for eight hours. Codes, credentials and authorization headers must not enter access logs. The new app independently controls the numeric user allowlist.
+
+Metadata search and package catalogs do not consume quota. Explicit POST access requests use a user-bound request ID; repeats return the same receipt. The first historical download costs one quota, including a whole package. Existing historical downloads remain free. Package read grants last to the user's current seven-day cycle end; material read grants last 30 minutes. Package members read under that grant do not consume additional admissions. Creating a new grant uses the existing per-resource daily limit (ten admissions, including the first download). Ordinary old-site downloads and integration grants share one immediate SQLite transaction for quota, records and counters.
+
+Only database-selected regular files inside the legacy data directory are readable. ZIP directory size, entry count and selected member size are bounded. Selected members must belong to the package; traversal, symlinks, duplicates, encryption and unsupported formats are rejected before admission. Single-file imports are limited to 20 MiB; supported formats are TXT, Markdown, PDF, DOCX and PPTX. No extraction directory or public preview/download URL is used by the integration.
+
+Before deployment, take a consistent SQLite backup. New integration tables are additive. On rollback restore the previous binary, frontend and configuration, retaining the live database and its download accounting. Preserve JWT_SECRET and source private SMTP configuration when starting the new binary so existing logins and mail continue to work.
+
+Validation: `cd backend && go test ./... && go vet ./...`; `cd frontend && npm ci && npm run build`. Integration tests use temporary databases and fixture files; they do not consume production user quotas.

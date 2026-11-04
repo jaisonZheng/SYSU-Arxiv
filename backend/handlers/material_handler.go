@@ -310,7 +310,10 @@ func (h *MaterialHandler) DownloadMaterialStatus(c *gin.Context) {
 	if remaining < 0 {
 		remaining = 0
 	}
-	canDownload := dailyRepeatRemaining > 0 || remaining > 0
+	canDownload := remaining > 0
+	if alreadyDownloaded {
+		canDownload = dailyRepeatRemaining > 0
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"already_downloaded":     alreadyDownloaded,
@@ -340,62 +343,17 @@ func (h *MaterialHandler) DownloadMaterial(c *gin.Context) {
 		return
 	}
 
-	// Check if already downloaded; if so, serve without deducting quota or recording.
-	alreadyDownloaded := false
-	if h.recordStore != nil {
-		alreadyDownloaded, err = h.recordStore.HasDownloadedRecord(userID, id, "material")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check download record"})
-			return
-		}
-	}
-
-	// Limit repeat downloads to 10 per day per resource
-	if alreadyDownloaded && h.recordStore != nil {
-		count, err := h.recordStore.CountDownloadRepeatsToday(userID, id, "material")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check daily repeat count"})
-			return
-		}
-		if count >= 10 {
-			c.JSON(http.StatusTooManyRequests, gin.H{"error": "daily_repeat_limit_exceeded", "message": "同一资料每天最多重复下载 10 次"})
-			return
-		}
-	}
-
-	// Check quota only for first-time downloads
-	if !alreadyDownloaded && h.quotaStore != nil {
-		user, err := db.NewUserStore().GetByID(userID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user"})
-			return
-		}
-		weekStart := h.quotaStore.CurrentWeekStart(user.CreatedAt)
-		quota, err := h.quotaStore.GetOrCreateQuota(userID, weekStart)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get quota"})
-			return
-		}
-		if quota.UsedQuota >= quota.TotalQuota {
+	// Preserve the runtime policy, with quota/history/day admission in one transaction.
+	if _, err := db.ConsumeDownload(c.Request.Context(), userID, id, "material"); err != nil {
+		switch err {
+		case db.ErrDownloadQuota:
 			c.JSON(http.StatusForbidden, gin.H{"error": "quota_exceeded"})
-			return
+		case db.ErrDailyDownloadLimit:
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "daily_repeat_limit_exceeded", "message": "同一资料每天最多重复下载 10 次"})
+		default:
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "download_authorization_failed"})
 		}
-		if _, err := h.quotaStore.IncrementUsed(userID, weekStart); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update quota"})
-			return
-		}
-	}
-
-	// Record first-time download and every repeat download for daily limit tracking.
-	if h.recordStore != nil {
-		if !alreadyDownloaded {
-			h.recordStore.CreateDownloadRecord(userID, id, "material")
-		}
-		h.recordStore.CreateDownloadRepeatRecord(userID, id, "material")
-	}
-	if !alreadyDownloaded {
-		h.store.IncrementDownloadCount(id)
-		db.IncrementSiteStat("total_downloads")
+		return
 	}
 
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", m.FileName))

@@ -428,6 +428,7 @@ export default function Detail({ isPackage }) {
                 <Download className="w-4 h-4" />
                 {downloading ? '下载中…' : `收下${isPackage ? '整个资源包' : '这份资料'}`}
               </button>
+              <button type="button" onClick={() => navigate(`/cramameleon?${isPackage ? 'packageId' : 'materialId'}=${m.id}`)} className="mt-3 w-full inline-flex items-center justify-center gap-2 h-11 rounded-full border border-[--color-camphor-200] bg-[--color-camphor-50] text-[--color-camphor-700] text-sm font-semibold hover:bg-[--color-camphor-100] transition-colors">用 Cramameleon 复习</button>
               <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
                 {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
               </p>
