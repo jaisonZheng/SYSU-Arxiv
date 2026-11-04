@@ -20,7 +20,7 @@ export default function Cramameleon({ authorize = false }) {
   async function enter() {
     setError('')
     if (!localStorage.getItem('token')) {
-      navigate(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`)
+      navigate(`/login?mode=login&redirect=${encodeURIComponent(location.pathname + location.search)}`)
       return
     }
     if (!authorize) {
@@ -44,7 +44,7 @@ export default function Cramameleon({ authorize = false }) {
       const result = await response.json()
       if (response.status === 401) {
         localStorage.removeItem('token'); localStorage.removeItem('user')
-        navigate(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`)
+        navigate(`/login?mode=login&redirect=${encodeURIComponent(location.pathname + location.search)}`)
         return
       }
       if (!response.ok) throw new Error(result.error?.message || '授权暂不可用，请重新进入。')
@@ -62,7 +62,7 @@ export default function Cramameleon({ authorize = false }) {
           <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-wide text-[var(--color-camphor-700)]"><Sparkles className="w-4 h-4" /> 破壁计划 · AI 学习内测</span>
           <h1 className="mt-4 text-[30px] md:text-[40px] font-bold leading-tight tracking-tight text-[var(--color-ink-900)]" style={{ fontFamily: 'var(--font-display)' }}>{authorize ? '用破壁计划账号继续' : <>把课程资料，<br />变成复习的起点</>}</h1>
           <p className="mt-4 text-[15px] leading-7 text-[var(--color-ink-700)]">Cramameleon 帮你梳理知识、理解难点和练习巩固。从熟悉的课程资料出发，也可以带上自己的文件。</p>
-          <button onClick={enter} disabled={busy || !config?.enabled} className="mt-6 inline-flex items-center justify-center gap-2 min-h-12 px-6 py-3 rounded-full bg-[var(--color-camphor-600)] hover:bg-[var(--color-camphor-700)] text-white font-semibold shadow-[var(--shadow-xs)] disabled:opacity-50 transition-colors">{busy ? '正在授权…' : authorize ? '同意并进入 Cramameleon' : '进入 Cramameleon'}<ArrowRight className="w-4 h-4" /></button>
+          <button style={{ color: '#fff' }} onClick={enter} disabled={busy || !config?.enabled} className="mt-6 inline-flex items-center justify-center gap-2 min-h-12 px-6 py-3 rounded-full bg-[var(--color-camphor-600)] hover:bg-[var(--color-camphor-700)] text-white font-semibold shadow-[var(--shadow-xs)] disabled:opacity-50 transition-colors">{busy ? '正在授权…' : authorize ? '同意并进入 Cramameleon' : '进入 Cramameleon'}<ArrowRight className="w-4 h-4" /></button>
           <p className="mt-3 text-[12px] leading-5 text-[var(--color-ink-500)]">目前仅对获邀账号开放。使用破壁计划已有账号，无需另设密码。</p>
         </div>
         <div className="rounded-3xl border border-white/80 bg-white/75 p-6 shadow-[var(--shadow-xs)]">

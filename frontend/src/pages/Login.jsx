@@ -9,7 +9,7 @@ export default function Login() {
   const requestedRedirect = searchParams.get('redirect') || '/'
   const redirect = requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//') && !requestedRedirect.includes('\\') ? requestedRedirect : '/'
 
-  const [mode, setMode] = useState(localStorage.getItem('token') ? 'login' : 'register') // 'login' | 'register'
+  const [mode, setMode] = useState(searchParams.get('mode') === 'login' || localStorage.getItem('token') ? 'login' : 'register') // 'login' | 'register'
   const [useCode, setUseCode] = useState(false) // login mode: password vs code
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
