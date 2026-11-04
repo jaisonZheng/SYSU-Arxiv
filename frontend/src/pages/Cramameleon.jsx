@@ -56,29 +56,29 @@ export default function Cramameleon({ authorize = false }) {
   }
 
   return <div className="max-w-[920px] mx-auto flex flex-col gap-6">
-    <section className="relative overflow-hidden rounded-[28px] border border-[--color-line] bg-gradient-to-br from-[#EDF5EF] via-[#FFFCF7] to-[#FFF0DF] p-6 md:p-10">
+    <section className="relative overflow-hidden rounded-[28px] border border-[var(--color-line)] bg-gradient-to-br from-[#EDF5EF] via-[#FFFCF7] to-[#FFF0DF] p-6 md:p-10">
       <div className="grid md:grid-cols-[1.5fr_1fr] gap-8 items-center">
         <div>
-          <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-wide text-[--color-camphor-700]"><Sparkles className="w-4 h-4" /> 破壁计划 · AI 学习内测</span>
-          <h1 className="mt-4 text-[30px] md:text-[40px] font-bold leading-tight tracking-tight text-[--color-ink-900]" style={{ fontFamily: 'var(--font-display)' }}>{authorize ? '用破壁计划账号继续' : '把课程资料，变成复习的起点'}</h1>
-          <p className="mt-4 text-[15px] leading-7 text-[--color-ink-700]">Cramameleon 帮你梳理知识、理解难点和练习巩固。从熟悉的课程资料出发，也可以带上自己的文件。</p>
-          <button onClick={enter} disabled={busy || !config?.enabled} className="mt-6 inline-flex items-center justify-center gap-2 min-h-12 px-6 py-3 rounded-full bg-[--color-camphor-600] hover:bg-[--color-camphor-700] text-white font-semibold shadow-[var(--shadow-xs)] disabled:opacity-50 transition-colors">{busy ? '正在授权…' : authorize ? '同意并进入 Cramameleon' : '进入 Cramameleon'}<ArrowRight className="w-4 h-4" /></button>
-          <p className="mt-3 text-[12px] leading-5 text-[--color-ink-500]">目前仅对获邀账号开放。使用破壁计划已有账号，无需另设密码。</p>
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold tracking-wide text-[var(--color-camphor-700)]"><Sparkles className="w-4 h-4" /> 破壁计划 · AI 学习内测</span>
+          <h1 className="mt-4 text-[30px] md:text-[40px] font-bold leading-tight tracking-tight text-[var(--color-ink-900)]" style={{ fontFamily: 'var(--font-display)' }}>{authorize ? '用破壁计划账号继续' : <>把课程资料，<br />变成复习的起点</>}</h1>
+          <p className="mt-4 text-[15px] leading-7 text-[var(--color-ink-700)]">Cramameleon 帮你梳理知识、理解难点和练习巩固。从熟悉的课程资料出发，也可以带上自己的文件。</p>
+          <button onClick={enter} disabled={busy || !config?.enabled} className="mt-6 inline-flex items-center justify-center gap-2 min-h-12 px-6 py-3 rounded-full bg-[var(--color-camphor-600)] hover:bg-[var(--color-camphor-700)] text-white font-semibold shadow-[var(--shadow-xs)] disabled:opacity-50 transition-colors">{busy ? '正在授权…' : authorize ? '同意并进入 Cramameleon' : '进入 Cramameleon'}<ArrowRight className="w-4 h-4" /></button>
+          <p className="mt-3 text-[12px] leading-5 text-[var(--color-ink-500)]">目前仅对获邀账号开放。使用破壁计划已有账号，无需另设密码。</p>
         </div>
         <div className="rounded-3xl border border-white/80 bg-white/75 p-6 shadow-[var(--shadow-xs)]">
-          <BookOpen className="w-8 h-8 text-[--color-camphor-600]" />
-          <p className="mt-4 text-lg font-bold text-[--color-ink-900]">选好资料，再开始学习</p>
-          <p className="mt-2 text-sm leading-6 text-[--color-ink-700]">搜索课程 → 查看目录 → 确认读取 → 提问复习</p>
-          <div className="mt-5 border-t border-[--color-line] pt-4 text-[13px] leading-6 text-[--color-ink-500]">浏览资料与目录不扣额度。读取前会提示费用，并沿用破壁计划的下载权益。</div>
+          <BookOpen className="w-8 h-8 text-[var(--color-camphor-600)]" />
+          <p className="mt-4 text-lg font-bold text-[var(--color-ink-900)]">选好资料，再开始学习</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--color-ink-700)]">搜索课程 · 查看目录<br />确认读取 · 提问复习</p>
+          <div className="mt-5 border-t border-[var(--color-line)] pt-4 text-[13px] leading-6 text-[var(--color-ink-500)]">浏览资料与目录不扣额度。读取前会提示费用，并沿用破壁计划的下载权益。</div>
         </div>
       </div>
     </section>
     <section className="grid md:grid-cols-2 gap-4">
-      <div className="rounded-3xl border border-[--color-line] bg-white p-6"><Files className="w-5 h-5 text-[--color-camphor-600]" /><h2 className="mt-3 font-bold">资料按需带入</h2><p className="mt-2 text-sm leading-6 text-[--color-ink-500]">先看课程包目录，只选需要的文件。支持文本 PDF、Word、PPT、Markdown 和 TXT，单份最多 20 MB。</p></div>
-      <div className="rounded-3xl border border-[--color-line] bg-white p-6"><ShieldCheck className="w-5 h-5 text-[--color-camphor-600]" /><h2 className="mt-3 font-bold">由你确认授权</h2><p className="mt-2 text-sm leading-6 text-[--color-ink-500]">进入后将使用当前账号的身份与资料访问权限。文件在浏览器解析，提问时发送相关片段用于回答。</p></div>
+      <div className="rounded-3xl border border-[var(--color-line)] bg-white p-6"><Files className="w-5 h-5 text-[var(--color-camphor-600)]" /><h2 className="mt-3 font-bold">资料按需带入</h2><p className="mt-2 text-sm leading-6 text-[var(--color-ink-500)]">先看课程包目录，只选需要的文件。支持文本 PDF、Word、PPT、Markdown 和 TXT，单份最多 20 MB。</p></div>
+      <div className="rounded-3xl border border-[var(--color-line)] bg-white p-6"><ShieldCheck className="w-5 h-5 text-[var(--color-camphor-600)]" /><h2 className="mt-3 font-bold">由你确认授权</h2><p className="mt-2 text-sm leading-6 text-[var(--color-ink-500)]">进入后将使用当前账号的身份与资料访问权限。文件在浏览器解析，提问时发送相关片段用于回答。</p></div>
     </section>
-    {error && <p role="alert" className="rounded-2xl border border-[--color-berry-100] bg-[--color-berry-50] p-4 text-sm text-[--color-berry-600]">{error}</p>}
-    {config && !config.enabled && <p role="status" className="text-sm text-[--color-ink-500]">学习助手正在准备中，请稍后再来。</p>}
-    {authorize && <Link to="/cramameleon" className="text-sm text-[--color-camphor-700] underline underline-offset-4">返回学习助手入口</Link>}
+    {error && <p role="alert" className="rounded-2xl border border-[var(--color-berry-100)] bg-[var(--color-berry-50)] p-4 text-sm text-[var(--color-berry-600)]">{error}</p>}
+    {config && !config.enabled && <p role="status" className="text-sm text-[var(--color-ink-500)]">学习助手正在准备中，请稍后再来。</p>}
+    {authorize && <Link to="/cramameleon" className="text-sm text-[var(--color-camphor-700)] underline underline-offset-4">返回学习助手入口</Link>}
   </div>
 }
