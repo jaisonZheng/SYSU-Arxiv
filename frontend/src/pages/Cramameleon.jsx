@@ -90,13 +90,13 @@ function CramameleonLanding() {
           <BookOpen className="w-8 h-8 text-[var(--color-camphor-600)]" />
           <p className="mt-4 text-lg font-bold text-[var(--color-ink-900)]">选好资料，再开始学习</p>
           <p className="mt-2 text-sm leading-6 text-[var(--color-ink-700)]">搜索课程 · 查看目录<br />确认读取 · 提问复习</p>
-          <div className="mt-5 border-t border-[var(--color-line)] pt-4 text-[13px] leading-6 text-[var(--color-ink-500)]">浏览资料与目录不扣额度。读取前会提示费用，并沿用破壁计划的下载权益。</div>
+          <div className="mt-5 border-t border-[var(--color-line)] pt-4 text-[13px] leading-6 text-[var(--color-ink-500)]">可搜索课程资料、预览并直接导入。</div>
         </div>
       </div>
     </section>
     <section className="grid md:grid-cols-2 gap-4">
       <div className="rounded-3xl border border-[var(--color-line)] bg-white p-6"><Files className="w-5 h-5 text-[var(--color-camphor-600)]" /><h2 className="mt-3 font-bold">资料按需带入</h2><p className="mt-2 text-sm leading-6 text-[var(--color-ink-500)]">先看课程包目录，只选需要的文件。支持文本 PDF、Word、PPT、Markdown 和 TXT，单份最多 20 MB。</p></div>
-      <div className="rounded-3xl border border-[var(--color-line)] bg-white p-6"><ShieldCheck className="w-5 h-5 text-[var(--color-camphor-600)]" /><h2 className="mt-3 font-bold">使用当前账号</h2><p className="mt-2 text-sm leading-6 text-[var(--color-ink-500)]">进入后将使用当前账号的身份与资料访问权限。文件在浏览器解析，提问时发送相关片段用于回答。</p></div>
+      <div className="rounded-3xl border border-[var(--color-line)] bg-white p-6"><ShieldCheck className="w-5 h-5 text-[var(--color-camphor-600)]" /><h2 className="mt-3 font-bold">使用当前账号</h2><p className="mt-2 text-sm leading-6 text-[var(--color-ink-500)]">进入后将使用当前账号的身份与资料访问权限。资料由 Cramameleon 服务端解析，提问时使用相关片段。</p></div>
     </section>
     {error && <p role="alert" className="rounded-2xl border border-[var(--color-berry-100)] bg-[var(--color-berry-50)] p-4 text-sm text-[var(--color-berry-600)]">{error}</p>}
     {config && !config.enabled && <p role="status" className="text-sm text-[var(--color-ink-500)]">学习助手正在准备中，请稍后再来。</p>}

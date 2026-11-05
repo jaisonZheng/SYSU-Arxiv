@@ -58,7 +58,7 @@ func (h *handler) access(c *gin.Context, kind string) {
 			n, _ := strconv.ParseInt(s, 10, 64)
 			f, err := h.openResource(kind, id, n)
 			if err != nil {
-				fail(c, 422, "FILE_UNAVAILABLE", "所选文件无法读取；没有扣除额度")
+				fail(c, 422, "FILE_UNAVAILABLE", "所选文件无法读取")
 				return
 			}
 			f.Close()
@@ -66,7 +66,7 @@ func (h *handler) access(c *gin.Context, kind string) {
 	} else {
 		f, err := h.openResource(kind, id, 0)
 		if err != nil {
-			fail(c, 422, "FILE_UNAVAILABLE", "文件不存在、格式不支持或超过 20 MB；没有扣除额度")
+			fail(c, 422, "FILE_UNAVAILABLE", "文件不存在、格式不支持或超过 20 MB")
 			return
 		}
 		f.Close()
@@ -77,13 +77,11 @@ func (h *handler) access(c *gin.Context, kind string) {
 	now := time.Now()
 	var grantID string
 	var expires int64
-	var charged int
-	var replayed, reused bool
-	var quota db.DownloadDecision
+	var replayed bool
 	err := db.WithDownloadTransaction(c.Request.Context(), func(conn *sql.Conn) error {
 		ctx := c.Request.Context()
 		var oldFingerprint string
-		err := conn.QueryRowContext(ctx, `SELECT r.fingerprint,r.grant_id,r.charged,a.expires FROM cram_request_receipts r JOIN cram_read_access a ON a.id=r.grant_id WHERE r.user_id=? AND r.request_id=?`, userID, v.RequestID).Scan(&oldFingerprint, &grantID, &charged, &expires)
+		err := conn.QueryRowContext(ctx, `SELECT r.fingerprint,r.grant_id,a.expires FROM cram_request_receipts r JOIN cram_read_access a ON a.id=r.grant_id WHERE r.user_id=? AND r.request_id=?`, userID, v.RequestID).Scan(&oldFingerprint, &grantID, &expires)
 		if err == nil {
 			if oldFingerprint != fingerprint {
 				return errConflict
@@ -92,55 +90,24 @@ func (h *handler) access(c *gin.Context, kind string) {
 				return errExpired
 			}
 			replayed = true
-			quota, err = db.DownloadQuotaInTransaction(ctx, conn, userID, now)
-			return err
+			return nil
 		}
 		if !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
-		quota, err = db.DownloadQuotaInTransaction(ctx, conn, userID, now)
+		grantID, err = randomToken()
 		if err != nil {
 			return err
 		}
-		if kind == "package" {
-			err = conn.QueryRowContext(ctx, "SELECT id,expires FROM cram_read_access WHERE user_id=? AND kind='package' AND resource_id=? AND cycle_start=? AND expires>?", userID, id, quota.CycleStart.Unix(), now.Unix()).Scan(&grantID, &expires)
-			if err == nil {
-				reused = true
-			} else if !errors.Is(err, sql.ErrNoRows) {
-				return err
-			}
+		expires = now.Add(30 * time.Minute).Unix()
+		if _, err = conn.ExecContext(ctx, "INSERT INTO cram_read_access(id,user_id,kind,resource_id,expires) VALUES(?,?,?,?,?)", grantID, userID, kind, id, expires); err != nil {
+			return err
 		}
-		if !reused {
-			quota, err = db.AdmitDownload(ctx, conn, userID, id, kind, now)
-			if err != nil {
-				return err
-			}
-			if quota.First {
-				charged = 1
-			}
-			grantID, err = randomToken()
-			if err != nil {
-				return err
-			}
-			expires = now.Add(30 * time.Minute).Unix()
-			var cycle any
-			if kind == "package" {
-				cycle = quota.CycleStart.Unix()
-				expires = quota.CycleEnd.Unix()
-			}
-			if _, err = conn.ExecContext(ctx, "INSERT INTO cram_read_access(id,user_id,kind,resource_id,cycle_start,expires) VALUES(?,?,?,?,?,?)", grantID, userID, kind, id, cycle, expires); err != nil {
-				return err
-			}
-		}
-		_, err = conn.ExecContext(ctx, "INSERT INTO cram_request_receipts(user_id,request_id,fingerprint,grant_id,charged) VALUES(?,?,?,?,?)", userID, v.RequestID, fingerprint, grantID, charged)
+		_, err = conn.ExecContext(ctx, "INSERT INTO cram_request_receipts(user_id,request_id,fingerprint,grant_id,charged) VALUES(?,?,?,?,0)", userID, v.RequestID, fingerprint, grantID)
 		return err
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, db.ErrDownloadQuota):
-			fail(c, 403, "QUOTA_EXCEEDED", "本周期下载额度已用完")
-		case errors.Is(err, db.ErrDailyDownloadLimit):
-			fail(c, 429, "DAILY_REPEAT_LIMIT", "该资料今天的下载次数已用完")
 		case errors.Is(err, errConflict):
 			fail(c, 409, "IDEMPOTENCY_CONFLICT", "请求编号已用于其他资料，请重新确认")
 		case errors.Is(err, errExpired):
@@ -150,7 +117,7 @@ func (h *handler) access(c *gin.Context, kind string) {
 		}
 		return
 	}
-	c.JSON(200, gin.H{"readId": grantID, "expires": time.Unix(expires, 0).UTC(), "charged": charged, "replayed": replayed, "reused": reused, "quota": quotaJSON(quota)})
+	c.JSON(200, gin.H{"readId": grantID, "expires": time.Unix(expires, 0).UTC(), "charged": 0, "replayed": replayed})
 }
 
 func (h *handler) content(c *gin.Context, kind string) {
@@ -165,23 +132,9 @@ func (h *handler) content(c *gin.Context, kind string) {
 			return
 		}
 	}
-	readID := c.Query("readId")
-	if !proof.MatchString(readID) {
-		fail(c, 403, "READ_ACCESS_REQUIRED", "请先确认读取资料")
-		return
-	}
-	var expires int64
-	err := db.DB.QueryRowContext(c.Request.Context(), "SELECT expires FROM cram_read_access WHERE id=? AND user_id=? AND kind=? AND resource_id=?", readID, c.GetInt64("userID"), kind, id).Scan(&expires)
-	if errors.Is(err, sql.ErrNoRows) {
-		fail(c, 403, "READ_ACCESS_REQUIRED", "没有该资料的读取授权")
-		return
-	}
-	if err != nil {
-		fail(c, 503, "STORAGE_FAILED", "读取授权暂不可用")
-		return
-	}
-	if expires <= time.Now().Unix() {
-		fail(c, 410, "ACCESS_EXPIRED", "读取授权已到期，请重新确认")
+	// The authenticated integration credential authorizes free reads. Keep validating
+	// explicit legacy grants for clients already holding a readId.
+	if readID, supplied := c.GetQuery("readId"); supplied && !validateReadGrant(c, readID, kind, id) {
 		return
 	}
 	f, err := h.openResource(kind, id, itemID)
@@ -192,9 +145,34 @@ func (h *handler) content(c *gin.Context, kind string) {
 	defer f.Close()
 	types := map[string]string{"pdf": "application/pdf", "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation", "txt": "text/plain; charset=utf-8", "md": "text/plain; charset=utf-8", "markdown": "text/plain; charset=utf-8"}
 	c.Header("Content-Type", types[format(f.name)])
+	if f.category == "past_exam" {
+		c.Header("X-Cram-Material-Category", f.category)
+	}
 	c.Header("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": f.name}))
 	c.Header("Content-Length", strconv.FormatInt(f.size, 10))
 	c.Status(200)
 	// Reads stay bounded even if the underlying file changes after admission.
 	_, _ = io.Copy(c.Writer, io.LimitReader(f, fileLimit))
+}
+
+func validateReadGrant(c *gin.Context, readID, kind string, id int64) bool {
+	if !proof.MatchString(readID) {
+		fail(c, 403, "READ_ACCESS_REQUIRED", "请先确认读取资料")
+		return false
+	}
+	var expires int64
+	err := db.DB.QueryRowContext(c.Request.Context(), "SELECT expires FROM cram_read_access WHERE id=? AND user_id=? AND kind=? AND resource_id=?", readID, c.GetInt64("userID"), kind, id).Scan(&expires)
+	if errors.Is(err, sql.ErrNoRows) {
+		fail(c, 403, "READ_ACCESS_REQUIRED", "没有该资料的读取授权")
+		return false
+	}
+	if err != nil {
+		fail(c, 503, "STORAGE_FAILED", "读取授权暂不可用")
+		return false
+	}
+	if expires <= time.Now().Unix() {
+		fail(c, 410, "ACCESS_EXPIRED", "读取授权已到期，请重新确认")
+		return false
+	}
+	return true
 }

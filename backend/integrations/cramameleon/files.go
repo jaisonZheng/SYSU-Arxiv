@@ -18,8 +18,9 @@ var errUnavailable = errors.New("file unavailable or unsupported")
 
 type openedFile struct {
 	io.ReadCloser
-	name string
-	size int64
+	name     string
+	size     int64
+	category string
 }
 type zipMember struct {
 	io.ReadCloser
@@ -122,7 +123,7 @@ func (h *handler) openResource(kind string, id, itemID int64) (*openedFile, erro
 			f.Close()
 			return nil, errUnavailable
 		}
-		return &openedFile{ReadCloser: f, name: filepath.Base(m.FileName), size: info.Size()}, nil
+		return &openedFile{ReadCloser: f, name: filepath.Base(m.FileName), size: info.Size(), category: m.Category}, nil
 	}
 	p, err := db.NewPackageStore().GetByID(id)
 	if err != nil {

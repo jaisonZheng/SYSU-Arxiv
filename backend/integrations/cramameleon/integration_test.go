@@ -163,14 +163,14 @@ func TestAuthorizationBindsCodeAndSingleUse(t *testing.T) {
 	}
 }
 
-func TestReadAccessAndHistoricalQuota(t *testing.T) {
+func TestReadAccessDoesNotConsumeDownloadQuota(t *testing.T) {
 	f := setup(t)
-	if w := f.call("GET", "/materials/1/content", "", f.token); w.Code != 403 {
-		t.Fatal("read without grant")
+	if w := f.call("GET", "/materials/1/content", "", f.token); w.Code != 200 {
+		t.Fatal("authenticated direct read failed", w.Code)
 	}
 	request := `{"requestId":"request_package_0001","itemIds":["1","2"]}`
 	grant := readGrant(t, f.call("POST", "/packages/1/access", request, f.token))
-	if n := used(t); n != 1 {
+	if n := used(t); n != 0 {
 		t.Fatalf("used %d", n)
 	}
 	if replay := readGrant(t, f.call("POST", "/packages/1/access", request, f.token)); replay != grant {
@@ -182,11 +182,9 @@ func TestReadAccessAndHistoricalQuota(t *testing.T) {
 	if _, err := db.DB.Exec("UPDATE download_quota SET used_quota=total_quota"); err != nil {
 		t.Fatal(err)
 	}
-	if again := readGrant(t, f.call("POST", "/packages/1/access", `{"requestId":"request_package_0002","itemIds":["2"]}`, f.token)); again != grant {
-		t.Fatal("current package grant not reused at zero quota")
-	}
+	readGrant(t, f.call("POST", "/packages/1/access", `{"requestId":"request_package_0002","itemIds":["2"]}`, f.token))
 	for _, item := range []string{"1", "2"} {
-		w := f.call("GET", "/packages/1/items/"+item+"/content?readId="+grant, "", f.token)
+		w := f.call("GET", "/packages/1/items/"+item+"/content", "", f.token)
 		if w.Code != 200 || w.Body.String() != "lecture text" {
 			t.Fatalf("content %d %s", w.Code, w.Body)
 		}
@@ -207,10 +205,10 @@ func TestReadAccessAndHistoricalQuota(t *testing.T) {
 		t.Fatal("expired retry created a new grant")
 	}
 	_, _ = db.DB.Exec("DELETE FROM cram_read_access WHERE id=?", grant)
-	w := f.call("POST", "/packages/1/access", `{"requestId":"next_cycle_history_01","itemIds":["1"]}`, f.token)
+	w := f.call("POST", "/packages/1/access", `{"requestId":"new_free_request_0001","itemIds":["1"]}`, f.token)
 	readGrant(t, w)
 	if !strings.Contains(w.Body.String(), `"charged":0`) {
-		t.Fatal("historical download charged again")
+		t.Fatal("compatibility grant unexpectedly charged")
 	}
 }
 
@@ -274,14 +272,14 @@ func TestConcurrentFinalQuotaAndDailyLimit(t *testing.T) {
 func TestScopeRevocationAndFilesystemBoundary(t *testing.T) {
 	f := setup(t)
 	for _, token := range []string{"", f.jwt} {
-		if w := f.call("GET", "/materials", "", token); w.Code != 401 {
+		if w := f.call("GET", "/materials/1/content", "", token); w.Code != 401 {
 			t.Fatal("legacy JWT accepted as integration credential")
 		}
 	}
 	outside := filepath.Join(t.TempDir(), "secret.txt")
 	_ = os.WriteFile(outside, []byte("private"), 0600)
 	_, _ = db.DB.Exec("UPDATE materials SET file_path=? WHERE id=1", outside)
-	if w := f.call("POST", "/materials/1/access", `{"requestId":"outside_root_request"}`, f.token); w.Code != 422 {
+	if w := f.call("GET", "/materials/1/content", "", f.token); w.Code != 422 {
 		t.Fatal("outside file allowed")
 	}
 	if used(t) != 0 {

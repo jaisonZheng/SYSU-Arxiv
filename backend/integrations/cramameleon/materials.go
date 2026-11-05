@@ -126,7 +126,7 @@ func (h *handler) listMaterials(c *gin.Context) {
 	if !ok {
 		return
 	}
-	values, total, err := db.NewMaterialStore().List(&models.MaterialFilter{Page: page, PageSize: size, Search: c.Query("search"), CourseName: c.Query("course_name")})
+	values, total, err := db.NewMaterialStore().List(&models.MaterialFilter{Page: page, PageSize: size, Search: c.Query("search"), CourseName: c.Query("course_name"), Category: c.Query("category")})
 	if err != nil {
 		fail(c, 503, "OLD_SITE_UNAVAILABLE", "资料搜索暂不可用")
 		return

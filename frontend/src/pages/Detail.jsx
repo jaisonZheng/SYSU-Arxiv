@@ -442,7 +442,7 @@ export default function Detail({ isPackage }) {
                 {isPackage && previewItem?.id && <input type="hidden" name="itemId" value={previewItem.id} />}
                 <button type="submit" disabled={!review?.enabled} className="mt-3 w-full inline-flex items-center justify-center gap-2 h-11 rounded-full border border-[var(--color-camphor-200)] bg-[var(--color-camphor-50)] text-[var(--color-camphor-700)] text-sm font-semibold hover:bg-[var(--color-camphor-100)] transition-colors disabled:opacity-50">用 Cramameleon 复习</button>
                 {review?.enabled && <p className="text-center text-[12px] text-[--color-ink-500] mt-2">
-                  自动导入{isPackage && previewItem?.id ? '当前预览文件' : '支持的资料'}，首次读取计 1 次下载额度
+                  自动导入{isPackage && previewItem?.id ? '当前预览文件' : '支持的资料'}
                 </p>}
                 {review?.enabled === false && <p role="status" className="text-center text-xs mt-2">暂时无法连接 Cramameleon，请刷新后重试。</p>}
               </form>
