@@ -72,6 +72,14 @@ function getDownloadUrl(baseUrl) {
   return `${baseUrl}${sep}token=${encodeURIComponent(token)}`;
 }
 
+export const cramameleonBase = '/api/integrations/cramameleon';
+
+export async function getCramameleonConfig(signal) {
+  const response = await fetch(`${API_BASE}${cramameleonBase}/config`, { signal });
+  if (!response.ok) throw new Error('暂时无法连接 Cramameleon，请刷新后重试。');
+  return response.json();
+}
+
 export const api = {
   listMaterials: (params = {}) => {
     const q = new URLSearchParams();

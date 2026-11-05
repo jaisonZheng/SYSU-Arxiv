@@ -10,7 +10,7 @@ const navItems = [
   { path: '/past-exams',        label: '历年真题' },
   { path: '/study-materials',   label: '学习资料' },
   { path: '/experience',        label: '经验攻略' },
-  { path: '/cramameleon',       label: 'AI 学习' },
+  { path: '/cramameleon',       label: 'AI复习' },
   { path: '/help',              label: '关于' },
 ]
 

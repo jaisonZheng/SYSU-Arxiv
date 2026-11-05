@@ -5,7 +5,7 @@ import {
   ChevronRight as Chevron, ChevronDown, Heart, Sparkles, Calendar, Building2, BookOpen, User,
   ExternalLink,
 } from 'lucide-react'
-import { api, isLoggedIn, triggerDownload } from '../api/client'
+import { api, getCramameleonConfig, isLoggedIn, triggerDownload } from '../api/client'
 import ResourceCard from '../components/ResourceCard'
 import SectionHeading from '../components/SectionHeading'
 import ThankButton from '../components/ThankButton'
@@ -185,6 +185,15 @@ export default function Detail({ isPackage }) {
   const [shareDeducted, setShareDeducted] = useState(true)
   const [downloading, setDownloading] = useState(false)
   const [toast, setToast] = useState('')
+  const [review, setReview] = useState(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    getCramameleonConfig(controller.signal).then(setReview).catch(() => {
+      if (!controller.signal.aborted) setReview({ enabled: false })
+    })
+    return () => controller.abort()
+  }, [])
 
   const showToast = (msg) => {
     setToast(msg)
@@ -428,7 +437,15 @@ export default function Detail({ isPackage }) {
                 <Download className="w-4 h-4" />
                 {downloading ? '下载中…' : `收下${isPackage ? '整个资源包' : '这份资料'}`}
               </button>
-              <button type="button" onClick={() => navigate(`/cramameleon?${isPackage ? 'packageId' : 'materialId'}=${m.id}`)} className="mt-3 w-full inline-flex items-center justify-center gap-2 h-11 rounded-full border border-[var(--color-camphor-200)] bg-[var(--color-camphor-50)] text-[var(--color-camphor-700)] text-sm font-semibold hover:bg-[var(--color-camphor-100)] transition-colors">用 Cramameleon 复习</button>
+              <form action={review?.appStartUrl} method="post">
+                <input type="hidden" name={isPackage ? 'packageId' : 'materialId'} value={m.id} />
+                {isPackage && previewItem?.id && <input type="hidden" name="itemId" value={previewItem.id} />}
+                <button type="submit" disabled={!review?.enabled} className="mt-3 w-full inline-flex items-center justify-center gap-2 h-11 rounded-full border border-[var(--color-camphor-200)] bg-[var(--color-camphor-50)] text-[var(--color-camphor-700)] text-sm font-semibold hover:bg-[var(--color-camphor-100)] transition-colors disabled:opacity-50">用 Cramameleon 复习</button>
+                {review?.enabled && <p className="text-center text-[12px] text-[--color-ink-500] mt-2">
+                  自动导入{isPackage && previewItem?.id ? '当前预览文件' : '支持的资料'}，首次读取计 1 次下载额度
+                </p>}
+                {review?.enabled === false && <p role="status" className="text-center text-xs mt-2">暂时无法连接 Cramameleon，请刷新后重试。</p>}
+              </form>
               <p className="text-center text-[12px] text-[--color-ink-500] mt-3">
                 {formatSize(m.file_size)} · 已被 {m.download_count || 0} 位同学收下
               </p>
